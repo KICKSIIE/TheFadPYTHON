@@ -78,3 +78,38 @@ def test_promo_view_groups_display_names_by_the_underlying_style(client, monkeyp
 def test_cashier_cannot_view_admin_promo_summary(client):
     login(client, 'dev_cashier')
     assert client.get('/admin/promos/1/view').status_code == 403
+
+
+def test_legacy_uppercase_json_audit_has_business_proof():
+    row = event(entity='SALE_ITEM', action='INSERT', after_data='{"SALE_ID":51,"QUANTITY":3,"UNIT_PRICE_AT_SALE":699,"PASSWORD_HASH":"hidden"}')
+    result = _readable([row], {})[0]
+    assert 'Receipt #51' in result['details'] and 'Quantity 3' in result['details']
+    assert result['changes'] and 'hidden' not in str(result)
+
+
+def test_promo_summary_uses_existing_edit_endpoint(client):
+    login(client, 'dev_admin')
+    assert 'Campaign overview' in client.get('/admin/promos/1?view=1').text
+
+
+def test_inventory_sorts_and_filters(client, monkeypatch):
+    login(client, 'dev_admin')
+    def routine(name, *args, **kw):
+        if name == 'fn_list_inventory':
+            from tests.test_smoke import INV
+            return [dict(INV, product_name='Zebra', current_stock=0), dict(INV, product_name='Alpha', current_stock=5)]
+        return fake_function(name, *args, **kw)
+    monkeypatch.setattr(db, 'call_function', routine)
+    html = client.get('/inventory/').text
+    assert html.index('Alpha') < html.index('Zebra')
+    html = client.get('/inventory/?stock=in').text
+    assert 'Alpha' in html and 'Zebra' not in html
+    html = client.get('/inventory/?sort=name_desc').text
+    assert html.index('Zebra') < html.index('Alpha')
+
+
+def test_cart_add_keeps_search_and_category(client):
+    from tests.test_smoke import post
+    login(client, 'dev_cashier')
+    response = post(client, '/pos/cart/add', {'product_id':'1','quantity':'1','q':'Denim','category':'1'}, '/pos/')
+    assert 'q=Denim' in response.location and 'category=1' in response.location

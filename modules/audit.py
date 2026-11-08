@@ -1,5 +1,6 @@
 """Readable audit history with an explicit allowlist of safe business fields."""
 from datetime import date, timedelta
+import json
 
 from flask import Blueprint, flash, render_template, request
 
@@ -62,7 +63,7 @@ def _subject(entity, data):
 FIELDS = {
     "product_photo": "product_id image_id sort_order",
     "product_image": "image_id mime_type uploaded_at",
-    "product": "product_id product_name description base_price current_price current_stock category_id discount_id color size is_active",
+    "product": "sale_id product_id product_name description base_price current_price current_stock category_id discount_id color size is_active",
     "category": "category_id category_name display_order",
     "users": "user_id username first_name middle_name last_name user_type station inventory_section hourly_rate email hired_on is_active isActive",
     "discount": "discount_id discount_name discount_percentage start_date end_date",
@@ -96,12 +97,21 @@ def _value(key, value):
     return str(value).replace("_", " ") if key in {"order_status", "shift_type"} else str(value)
 
 
+def _snapshot(value):
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except (ValueError, TypeError):
+            return {}
+    return {str(k).lower(): v for k, v in value.items()} if isinstance(value, dict) else {}
+
+
 def _readable(rows, staff):
     out = []
     for row in rows:
-        entity, action = row["entity"], row["action"]
-        before = row.get("before_data") if isinstance(row.get("before_data"), dict) else {}
-        after = row.get("after_data") if isinstance(row.get("after_data"), dict) else {}
+        entity, action = row["entity"].lower(), row["action"].upper()
+        before = _snapshot(row.get("before_data"))
+        after = _snapshot(row.get("after_data"))
         changes = []
         for key in FIELDS.get(entity, "").split():
             if key not in before and key not in after:
@@ -121,12 +131,21 @@ def _readable(rows, staff):
         details = f"{noun.capitalize()} {verb}"
         if entity == "sales":
             details = {"INSERT": "Receipt created", "UPDATE": "Order updated", "DELETE": "Sale deleted"}.get(action, details)
+        if entity == "product" and before.get("current_stock") != after.get("current_stock") and "current_stock" in before and "current_stock" in after:
+            details = f"Stock changed: {before['current_stock']} → {after['current_stock']}"
+            if after.get("sale_id"):
+                details += f" · Receipt #{after['sale_id']}"
+        if entity == "inventory_logs" and after.get("sale_id"):
+            details = f"Sale stock movement · Receipt #{after['sale_id']} · Quantity {after.get('quantity_changed', '—')} · Balance {after.get('balance_after', '—')}"
+        if entity == "sale_item" and after.get("sale_id"):
+            details = f"Item sold · Receipt #{after['sale_id']} · Quantity {after.get('quantity', '—')} · Unit price {_value('unit_price_at_sale', after.get('unit_price_at_sale'))}"
         if entity == "users" and action == "UPDATE" and not changes:
             details = "Account security updated"
         out.append({"time": row["occurred_at"], "actor": row["actor"],
                     "name": row.get("actor_name") or member.get("name") or row["actor"],
                     "approved_by": row.get("approved_by"), "details": details,
                     "subject": _subject(entity, after or before), "changes": changes,
+                    "security_only": entity == "management_pin" or details == "Account security updated",
                     "badge": BADGES.get(action, ""),
                     "role": ROLES.get(row.get("actor_role"), row.get("actor_role")) or member.get("role", "System" if row["actor"] == "system" else "Unavailable")})
     return out

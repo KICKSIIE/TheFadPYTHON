@@ -136,6 +136,9 @@ def test_sale_totals_and_cancellation_restore_stock(conn):
     uid=staff(conn)
     product=conn.execute('SELECT product_id,current_stock FROM product WHERE is_active AND current_stock>3 ORDER BY product_id LIMIT 1').fetchone()
     sale=conn.execute("CALL sp_create_sale(%s,'Delivery','Cash','Test Customer','09000000000','Test address',%s::jsonb,NULL)",(uid,json.dumps([{'product_id':product['product_id'],'quantity':2}]))).fetchone()['p_sale_id']
+    audit = conn.execute("SELECT before_data,after_data FROM change_audit WHERE entity='product' AND after_data->>'sale_id'=%s ORDER BY audit_id DESC LIMIT 1", (str(sale),)).fetchone()
+    assert audit['before_data']['current_stock'] == product['current_stock']
+    assert audit['after_data']['current_stock'] == product['current_stock'] - 2
     totals=conn.execute('SELECT s.total_amount,(SELECT sum(quantity*unit_price_at_sale) FROM sale_item WHERE sale_id=s.sale_id) item_total FROM sales s WHERE sale_id=%s',(sale,)).fetchone()
     assert totals['total_amount']==totals['item_total']
     assert conn.execute('SELECT current_stock FROM product WHERE product_id=%s',(product['product_id'],)).fetchone()['current_stock']==product['current_stock']-2

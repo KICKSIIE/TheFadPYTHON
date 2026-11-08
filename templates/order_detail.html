@@ -90,6 +90,6 @@
 {% if current_user.role == 'Admin' and sale.order_status in ('Completed', 'Partially_Refunded') %}
   <p><a class="btn btn-quiet" href="{{ url_for('refunds.sale', sale_id=sale.sale_id) }}">Refund items from this order</a></p>
 {% endif %}
-<p class="field-note">The receipt reflects the current order status. Use Print receipt for a clean copy.</p>
+
 </section></aside></div>
 {% endblock %}

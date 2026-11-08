@@ -604,3 +604,8 @@ input.narrow:not([type=checkbox]):not([type=radio]) { width: 110px; }
 .staff .table a:not(.btn) { font-weight: 600; text-decoration-color: #b0bccd; text-decoration-thickness: 1px; }
 .staff .table a:not(.btn):hover { color: #435c7c; text-decoration-color: currentColor; }
 @media print { .receipt-items { overflow: visible; } }
+.table-sort { border: 0; background: transparent; color: inherit; font: inherit; text-transform: inherit; letter-spacing: inherit; cursor: pointer; text-align: inherit; padding: 0; }
+.row-number { color: var(--muted); width: 45px; font-variant-numeric: tabular-nums; }
+.upload-previews { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .75rem; }
+.upload-previews > div { display: grid; gap: .35rem; width: 95px; font-size: .75rem; }
+.upload-previews img { width: 95px; height: 95px; border-radius: 8px; object-fit: cover; }

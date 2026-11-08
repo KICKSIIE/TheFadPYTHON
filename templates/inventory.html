@@ -10,12 +10,15 @@
   <label class="field-inline">Low means <span class="muted">at or below</span>
     <input type="number" name="max" min="0" value="{{ limit }}" class="narrow" aria-label="Low stock level"></label>
   <label class="toggle"><input type="checkbox" name="low" value="1" {{ 'checked' if low_only }}><span>Low stock only</span></label>
+  <select name="category" aria-label="Category"><option value="">All categories</option>{% for c in categories %}<option {{ 'selected' if category == c }}>{{ c }}</option>{% endfor %}</select>
+  <select name="stock" aria-label="Stock availability"><option value="">All stock</option><option value="in" {{ 'selected' if stock == 'in' }}>In stock</option><option value="out" {{ 'selected' if stock == 'out' }}>Sold out</option></select>
+  <select name="sort" aria-label="Sort inventory">{% for value, label in [('name_asc','Name A–Z'),('name_desc','Name Z–A'),('stock_asc','Stock low to high'),('stock_desc','Stock high to low')] %}<option value="{{ value }}" {{ 'selected' if sort == value }}>{{ label }}</option>{% endfor %}</select>
   <button class="btn" type="submit">Filter</button>
   <a class="btn btn-quiet btn-sm" href="{{ url_for('inventory.index', max=0, low='1') }}">Out of stock</a>
 </form>
 {% if items %}
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>Product</th><th>Category</th><th class="num">In stock</th><th></th></tr></thead>
+  <thead><tr><th>Product</th><th>Category</th><th class="num">In stock</th><th>Actions</th></tr></thead>
   <tbody>
   {% for i in items %}
     <tr class="{{ '' if i.is_active else 'dim' }}">

@@ -114,6 +114,8 @@ def edit(discount_id):
         return redirect(url_for("admin_promos.index"))
     if promo is None:
         abort(404)
+    if request.args.get("view") == "1":
+        return render_template("admin/promo_detail.html", promo=promo, linked=linked)
     return render_template("admin/promo_form.html", promo=promo, linked=linked, products=products,
                            editing=True, discount_id=discount_id, today=date.today())
 

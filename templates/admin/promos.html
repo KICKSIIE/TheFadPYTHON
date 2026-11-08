@@ -23,13 +23,13 @@
       </td>
       <td class="actions">
         {% if r.status == 'Ended' %}
-          <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_promos.view', discount_id=r.discount_id) }}">View</a>
+          <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_promos.edit', discount_id=r.discount_id, view=1) }}">View</a>
           <button class="btn btn-sm btn-danger" type="button"
                   data-confirm data-action="{{ url_for('admin_promos.delete_unused', discount_id=r.discount_id) }}"
                   data-title="Delete promo" data-confirm-label="Delete" data-danger="1"
                   data-message="Delete &quot;{{ r.discount_name }}&quot;? This cannot be undone, and promos already used in a sale cannot be deleted.">Delete</button>
         {% else %}
-          <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_promos.view', discount_id=r.discount_id) }}">View promo</a>
+          <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_promos.edit', discount_id=r.discount_id, view=1) }}">View promo</a>
           {% if r.status == 'Active' %}
           <button class="btn btn-sm btn-quiet" type="button"
                   data-confirm data-action="{{ url_for('admin_promos.end_now', discount_id=r.discount_id) }}"
