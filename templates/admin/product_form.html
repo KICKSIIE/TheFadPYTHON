@@ -93,16 +93,24 @@
 {% if editing %}
 <h2>Colors and sizes of this product</h2>
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>Color</th><th>Size</th><th class="num">Stock</th><th>Status</th><th class="actions-head">Actions</th></tr></thead>
+  <thead><tr><th>Color</th><th>Size</th><th class="num">Product ID</th><th class="num">Stock</th><th>Status</th><th class="actions-head">Actions</th></tr></thead>
   <tbody>{% for v in variants %}
     <tr class="{{ '' if v.is_active else 'dim' }}">
       <td>{% if v.color %}<span class="with-swatch">{{ swatch(v.color, 'sm') }}{{ v.color }}</span>{% else %}<span class="muted">No color</span>{% endif %}</td>
       <td>{% if v.size %}<span class="chip">{{ v.size }}</span>{% else %}<span class="muted">No size</span>{% endif %}
           {% if v.product_id == product_id %}<span class="muted small"> (editing)</span>{% endif %}</td>
+      <td class="num id-cell">{{ v.product_id }}</td>
       <td class="num">{{ v.current_stock }}</td>
-      <td>{{ 'Active' if v.is_active else 'Inactive' }}</td>
+      <td><span class="badge {{ 'ok' if v.is_active else '' }}">{{ 'Active' if v.is_active else 'Inactive' }}</span></td>
       <td class="actions">{% if v.product_id != product_id %}<a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=v.product_id) }}">Edit</a>{% endif %}
-        <a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', product_id=v.product_id) }}">Stock</a></td>
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', product_id=v.product_id) }}">Stock</a>
+        <button class="btn btn-sm {{ 'btn-danger' if v.is_active else 'btn-quiet' }}" type="button"
+                data-confirm data-action="{{ url_for('admin_products.set_active', product_id=v.product_id) }}"
+                data-title="{{ 'Deactivate this color/size' if v.is_active else 'Reactivate this color/size' }}"
+                data-confirm-label="{{ 'Deactivate' if v.is_active else 'Reactivate' }}"
+                data-danger="{{ '1' if v.is_active else '0' }}"
+                data-fields='{{ {"active": "0" if v.is_active else "1"}|tojson }}'
+                data-message="{{ ('Deactivate ' ~ v.color ~ ' (' ~ v.size ~ ')' ~ '? It leaves the shop and stock stays as it is.') if v.is_active else ('Reactivate ' ~ v.color ~ ' (' ~ v.size ~ ')? It returns to the shop.') }}">{{ 'Deactivate' if v.is_active else 'Reactivate' }}</button></td>
     </tr>{% endfor %}
   </tbody>
 </table></div>

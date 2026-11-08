@@ -12,22 +12,37 @@
   <label class="check">To <input type="date" name="end" value="{{ end.isoformat() }}"></label>
   <button class="btn btn-quiet" type="submit">Show</button>
 </form>
-{% if report %}
+{% set total = report|selectattr('refund_method', 'equalto', 'TOTAL')|first %}
+{% set methods = report|rejectattr('refund_method', 'equalto', 'TOTAL')|list %}
+{% set count_sum = methods|sum(attribute='refund_count') %}
+{% set units_sum = methods|sum(attribute='units_refunded') %}
+{% set refunded_sum = methods|sum(attribute='total_refunded') %}
+{% set count_total = total.refund_count if total else count_sum %}
+{% set units_total = total.units_refunded if total else units_sum %}
+{% set refunded_total = total.total_refunded if total else refunded_sum %}
+<div class="stats compact">
+  <div class="stat"><span class="stat-num">{{ total.gross_sales|peso if total and total.gross_sales is not none else '—' }}</span><span class="muted">Gross sales in this period</span></div>
+  <div class="stat"><span class="stat-num">{{ refunded_total|peso }}</span><span class="muted">Refunded</span></div>
+  <div class="stat"><span class="stat-num">{{ total.net_sales|peso if total and total.net_sales is not none else '—' }}</span><span class="muted">Net sales</span></div>
+</div>
+{% if methods %}
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>Method</th><th class="num">Refunds</th><th class="num">Units</th><th class="num">Refunded</th><th class="num">Gross sales</th><th class="num">Net sales</th></tr></thead>
-  <tbody>{% for r in report %}
-    <tr class="{{ 'total' if r.refund_method == 'TOTAL' else '' }}"><td>{{ r.refund_method }}</td><td class="num">{{ r.refund_count }}</td><td class="num">{{ r.units_refunded }}</td>
-        <td class="num">{{ r.total_refunded|peso }}</td><td class="num">{{ r.gross_sales|peso if r.gross_sales is not none else '' }}</td><td class="num">{{ r.net_sales|peso if r.net_sales is not none else '' }}</td></tr>
+  <thead><tr><th>Method</th><th class="num">Refunds</th><th class="num">Units</th><th class="num">Refunded</th></tr></thead>
+  <tbody>{% for r in methods %}
+    <tr><td>{{ r.refund_method }}</td><td class="num">{{ r.refund_count }}</td><td class="num">{{ r.units_refunded }}</td><td class="num">{{ r.total_refunded|peso }}</td></tr>
   {% endfor %}</tbody>
+  <tfoot><tr><td>Total</td><td class="num">{{ count_total }}</td><td class="num">{{ units_total }}</td><td class="num">{{ refunded_total|peso }}</td></tr></tfoot>
 </table></div>
+{% else %}
+  <p class="empty">No refunds in this period.</p>
 {% endif %}
 <h2>Refunds in this period</h2>
 {% if refunds %}
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>When</th><th>Order</th><th>Item</th><th class="num">Qty</th><th class="num">Amount</th><th>Method</th><th>Reason</th><th>By</th></tr></thead>
+  <thead><tr><th>When</th><th class="num">Refund ID</th><th>Order ID</th><th>Item</th><th class="num">Qty</th><th class="num">Amount</th><th>Method</th><th>Reason</th><th>By</th></tr></thead>
   <tbody>{% for r in refunds %}
-    <tr><td>{{ r.refund_date|dt }}</td><td><a href="{{ url_for('orders.detail', sale_id=r.sale_id) }}">#{{ r.sale_id }}</a></td><td>{{ r.product_name or '' }}</td>
-        <td class="num">{{ r.quantity_refunded }}</td><td class="num">{{ r.refund_amount|peso }}</td><td>{{ r.refund_method }}</td><td>{{ r.reason or '' }}</td><td>{{ r.processed_by }}</td></tr>
+    <tr><td class="date-cell">{{ r.refund_date|dt }}</td><td class="num id-cell">{{ r.refund_id }}</td><td><a href="{{ url_for('orders.detail', sale_id=r.sale_id) }}">#{{ r.sale_id }}</a></td><td class="product-cell">{{ r.product_name or '' }}</td>
+        <td class="num">{{ r.quantity_refunded }}</td><td class="num">{{ r.refund_amount|peso }}</td><td>{{ r.refund_method }}</td><td>{{ r.reason or '' }}</td><td class="name-cell">{{ r.processed_by }}</td></tr>
   {% endfor %}</tbody>
 </table></div>
 {% else %}<p class="empty">No refunds in this period.</p>{% endif %}

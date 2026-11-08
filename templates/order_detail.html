@@ -39,17 +39,17 @@
   {% endif %}
   <div class="receipt-rule"></div>
   <div class="receipt-items"><table class="table compact">
-    <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead>
+    <thead><tr><th class="num">Product ID</th><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead>
     <tbody>{% for i in items %}
-      <tr><td>{{ i.product_name }}{% if i.discount_name %}<div class="muted small">{{ i.discount_name }}</div>{% endif %}{% if i.quantity_refunded %}<div class="warn-text small">{{ i.quantity_refunded }} refunded</div>{% endif %}</td>
+      <tr><td class="num id-cell">{{ i.product_id }}</td><td>{{ i.product_name }}{% if i.discount_name %}<div class="muted small">{{ i.discount_name }}</div>{% endif %}{% if i.quantity_refunded %}<div class="warn-text small">{{ i.quantity_refunded }} refunded</div>{% endif %}</td>
           <td class="num">{{ i.quantity }}</td>
           <td class="num">{% if i.unit_price_at_sale != i.base_price %}<s class="muted">{{ i.base_price|peso }}</s> {% endif %}{{ i.unit_price_at_sale|peso }}</td>
           <td class="num">{{ i.line_total|peso }}</td></tr>{% endfor %}
     </tbody>
     <tfoot>
-      <tr><td colspan="3">Subtotal</td><td class="num">{{ sale.subtotal|peso }}</td></tr>
-      {% if sale.discount_amount %}<tr><td colspan="3">Promo savings</td><td class="num">-{{ sale.discount_amount|peso }}</td></tr>{% endif %}
-      <tr><td colspan="3"><strong>Total</strong></td><td class="num"><strong>{{ sale.total_amount|peso }}</strong></td></tr>
+      <tr><td colspan="4">Subtotal</td><td class="num">{{ sale.subtotal|peso }}</td></tr>
+      {% if sale.discount_amount %}<tr><td colspan="4">Promo savings</td><td class="num">-{{ sale.discount_amount|peso }}</td></tr>{% endif %}
+      <tr><td colspan="4"><strong>Total</strong></td><td class="num"><strong>{{ sale.total_amount|peso }}</strong></td></tr>
     </tfoot>
   </table></div>
   <div class="receipt-rule"></div>

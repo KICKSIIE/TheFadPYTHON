@@ -2,7 +2,7 @@
 {% block title %}{{ 'Edit staff' if editing else 'Add staff' }}{% endblock %}
 {% block content %}
 <div class="head">
-  <h1>{{ 'Edit staff' if editing else 'Add staff' }}</h1>
+  <h1>{{ 'Edit staff' if editing else 'Add staff' }}{% if editing %} <span class="muted small id-cell">User #{{ user_id }}</span>{% endif %}</h1>
   <a class="btn btn-quiet" href="{{ url_for('admin_staff.index') }}">Back</a>
 </div>
 <form class="form wide" method="post"

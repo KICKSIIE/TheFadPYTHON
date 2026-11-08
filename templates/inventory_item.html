@@ -2,7 +2,7 @@
 {% block title %}{{ product.product_name }}{% if product.color %} - {{ product.color }}{% endif %}{% if product.size %} ({{ product.size }}){% endif %} stock{% endblock %}
 {% block content %}
 <div class="head">
-  <h1>{{ product.product_name }}{% if product.color %} <span class="chip">{{ product.color }}</span>{% endif %}{% if product.size %} <span class="chip">{{ product.size }}</span>{% endif %}</h1>
+  <h1>{{ product.product_name }}{% if product.color %} <span class="chip">{{ product.color }}</span>{% endif %}{% if product.size %} <span class="chip">{{ product.size }}</span>{% endif %} <span class="muted small id-cell">Product #{{ product.product_id }}</span></h1>
   <a class="btn btn-quiet" href="{{ url_for('inventory.index') }}">Back</a>
 </div>
 <p><strong>{{ product.current_stock }}</strong> in stock</p>

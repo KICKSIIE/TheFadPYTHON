@@ -15,6 +15,7 @@ bp = Blueprint("inventory", __name__, url_prefix="/inventory")
 def index():
     q = request.args.get("q", "").strip()
     low_only = request.args.get("low") == "1"
+    category = request.args.get("category", "").strip()
     limit = request.args.get("max", type=int)
     if limit is None or limit < 0:
         limit = low_stock_default()
@@ -23,17 +24,15 @@ def index():
     except db.DbError as exc:
         flash(str(exc), "error")
         items = []
-    categories = sorted({i["category_name"] for i in items}, key=str.casefold)
-    category = request.args.get("category", "")
-    stock = request.args.get("stock", "")
-    sort = request.args.get("sort", "name_asc")
-    items = [i for i in items if (not category or i["category_name"] == category)
-             and (stock != "in" or i["current_stock"] > 0)
-             and (stock != "out" or i["current_stock"] == 0)]
-    key = (lambda i: (i["current_stock"], i["product_name"].casefold())) if sort.startswith("stock_") else (lambda i: i["product_name"].casefold())
-    items.sort(key=key, reverse=sort.endswith("_desc"))
+    if category:
+        items = [i for i in items if i["category_name"] == category]
+    items.sort(key=lambda i: (i["product_name"].casefold(), i["product_id"]))
+    try:
+        categories = [c["category_name"] for c in db.call_function("fn_list_categories")]
+    except db.DbError:
+        categories = sorted({i["category_name"] for i in items}, key=str.casefold)
     return render_template("inventory.html", items=items, q=q, low_only=low_only, limit=limit,
-                           categories=categories, category=category, stock=stock, sort=sort)
+                           categories=categories, category=category)
 
 
 @bp.route("/history")

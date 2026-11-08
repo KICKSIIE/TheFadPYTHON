@@ -39,7 +39,7 @@
       <table class="table compact"><tbody>
       {% for l in lines %}
         <tr>
-          <td>{{ l.product.display_name }}<div class="muted small">{{ l.product.current_price|peso }} each</div>{% if l.short %}<div class="warn-text small">Only {{ l.product.current_stock }} in stock</div>{% endif %}</td>
+          <td>{{ l.product.display_name }} <span class="muted small id-cell">#{{ l.product.product_id }}</span><div class="muted small">{{ l.product.current_price|peso }} each</div>{% if l.short %}<div class="warn-text small">Only {{ l.product.current_stock }} in stock</div>{% endif %}</td>
           <td>
             <form method="post" action="{{ url_for('pos.update') }}" class="stepper">
               <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="category" value="{{ category or '' }}">

@@ -65,7 +65,8 @@ BEGIN
            (p.current_stock <= p_threshold)
       FROM thefad.product p
       JOIN thefad.category c ON c.category_id = p.category_id
-     WHERE (p_search IS NULL OR p.display_name ILIKE '%' || p_search || '%')
+     WHERE (p_search IS NULL OR p.display_name ILIKE '%' || p_search || '%'
+            OR p.product_id::text = btrim(p_search))
        AND (NOT p_low_only OR p.current_stock <= p_threshold)
      ORDER BY (p.current_stock <= p_threshold) DESC, p.current_stock, p.display_name;
 END;

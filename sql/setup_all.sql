@@ -268,7 +268,9 @@ BEGIN
             AND CURRENT_DATE BETWEEN d.start_date AND d.end_date
      WHERE (p_include_inactive OR p.is_active)
        AND (p_category_id IS NULL OR p.category_id = p_category_id)
-       AND (p_search IS NULL OR NOT EXISTS (
+       AND (p_search IS NULL
+            OR (btrim(p_search) ~ '^[0-9]+$' AND p.product_id = btrim(p_search)::int)
+            OR NOT EXISTS (
               SELECT 1 FROM unnest(string_to_array(trim(p_search), ' ')) AS w
                WHERE w <> ''
                  AND NOT (p.display_name ILIKE '%' || w || '%'
@@ -1355,7 +1357,8 @@ BEGIN
            (p.current_stock <= p_threshold)
       FROM thefad.product p
       JOIN thefad.category c ON c.category_id = p.category_id
-     WHERE (p_search IS NULL OR p.display_name ILIKE '%' || p_search || '%')
+     WHERE (p_search IS NULL OR p.display_name ILIKE '%' || p_search || '%'
+            OR p.product_id::text = btrim(p_search))
        AND (NOT p_low_only OR p.current_stock <= p_threshold)
      ORDER BY (p.current_stock <= p_threshold) DESC, p.current_stock, p.display_name;
 END;

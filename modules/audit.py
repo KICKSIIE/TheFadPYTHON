@@ -1,5 +1,5 @@
 """Readable audit history with an explicit allowlist of safe business fields."""
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 import json
 
 from flask import Blueprint, flash, render_template, request
@@ -76,6 +76,13 @@ FIELDS = {
     "overtime_permit": "permit_id user_id work_date start_time end_time grace_minutes note dtr_id created_by",
 }
 MONEY_FIELDS = {"base_price", "current_price", "unit_price_at_sale", "subtotal", "discount_amount", "total_amount", "amount", "refund_amount", "hourly_rate"}
+# Internal keys are proven by the subject chip; they are not shown in the change list.
+INTERNAL = {"log_id", "product_id", "user_id", "sale_id", "item_id", "sale_item_id", "dtr_id",
+            "permit_id", "audit_id", "category_id", "discount_id", "image_id", "sort_order",
+            "quantity_refunded", "created_by"}
+STOCK_KINDS = {"in": "Stock in", "out": "Stock out", "adjust": "Stock count"}
+# Already stated in the summary line, so it is not repeated in the proof list.
+SUMMARY_FIELDS = {"transaction_type"}
 
 
 def _value(key, value):
@@ -85,6 +92,8 @@ def _value(key, value):
         return "Yes" if value else "No"
     if key == "user_type":
         return ROLES.get(value, str(value))
+    if key == "transaction_type":
+        return STOCK_KINDS.get(str(value).lower(), str(value))
     if key in MONEY_FIELDS:
         try:
             from decimal import Decimal
@@ -94,7 +103,14 @@ def _value(key, value):
     # Never serialize nested payloads, which could contain private fields.
     if isinstance(value, (dict, list)):
         return "[Structured value]"
-    return str(value).replace("_", " ") if key in {"order_status", "shift_type"} else str(value)
+    text = str(value)
+    if len(text) >= 19 and text[4] == "-" and text[10] == "T":      # ISO timestamp from JSONB
+        try:
+            stamp = datetime.fromisoformat(text[:19])
+            return stamp.strftime("%b %d, %Y · %I:%M %p")
+        except ValueError:
+            pass
+    return text.replace("_", " ") if key in {"order_status", "shift_type"} else text
 
 
 def _snapshot(value):
@@ -114,7 +130,7 @@ def _readable(rows, staff):
         after = _snapshot(row.get("after_data"))
         changes = []
         for key in FIELDS.get(entity, "").split():
-            if key not in before and key not in after:
+            if key in INTERNAL or key in SUMMARY_FIELDS or (key not in before and key not in after):
                 continue
             if action == "UPDATE" and before.get(key) == after.get(key):
                 continue
@@ -122,6 +138,7 @@ def _readable(rows, staff):
                 continue
             changes.append({"field": key.replace("_", " ").capitalize(),
                             "before": _value(key, before.get(key)), "after": _value(key, after.get(key))})
+        changes = changes[:10]
         member = staff.get(row["actor"], {})
         # Old callers may provide only role strings.
         if isinstance(member, str):
@@ -135,13 +152,17 @@ def _readable(rows, staff):
             details = f"Stock changed: {before['current_stock']} → {after['current_stock']}"
             if after.get("sale_id"):
                 details += f" · Receipt #{after['sale_id']}"
-        if entity == "inventory_logs" and after.get("sale_id"):
-            details = f"Sale stock movement · Receipt #{after['sale_id']} · Quantity {after.get('quantity_changed', '—')} · Balance {after.get('balance_after', '—')}"
+        if entity == "inventory_logs":
+            kind = STOCK_KINDS.get(str(after.get("transaction_type", "")).lower(), "Stock movement")
+            quantity = after.get("quantity_changed")
+            details = kind + (f" · {quantity} unit{'' if quantity in (1, '1') else 's'}" if quantity not in (None, "") else "")
+            if after.get("sale_id"):
+                details += f" · Receipt #{after['sale_id']}"
         if entity == "sale_item" and after.get("sale_id"):
             details = f"Item sold · Receipt #{after['sale_id']} · Quantity {after.get('quantity', '—')} · Unit price {_value('unit_price_at_sale', after.get('unit_price_at_sale'))}"
         if entity == "users" and action == "UPDATE" and not changes:
             details = "Account security updated"
-        out.append({"time": row["occurred_at"], "actor": row["actor"],
+        out.append({"audit_id": row.get("audit_id"), "time": row["occurred_at"], "actor": row["actor"],
                     "name": row.get("actor_name") or member.get("name") or row["actor"],
                     "approved_by": row.get("approved_by"), "details": details,
                     "subject": _subject(entity, after or before), "changes": changes,

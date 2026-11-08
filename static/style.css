@@ -197,7 +197,7 @@ textarea { resize: vertical; }
 .form { max-width: 440px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem; }
 .form.wide { max-width: 760px; }
 .form.flat { border: 0; padding: 0; max-width: none; background: transparent; }
-.form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.form .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .form-actions { display: flex; gap: .6rem; margin-top: 1.4rem; }
 .spaced { margin-top: 1rem; }
 .photo-now { display: flex; align-items: center; gap: 1rem; margin-bottom: .4rem; }
@@ -212,6 +212,10 @@ textarea { resize: vertical; }
 .table tbody tr:last-child td { border-bottom: 0; }
 .table tfoot td { font-weight: 700; border-bottom: 0; border-top: 1px solid var(--line-2); }
 .table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.id-cell { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.table .product-cell { min-width: 165px; }
+.table .sizes-cell { min-width: 184px; }
+.table .date-cell, .table .name-cell, .table .time-cell { white-space: nowrap; }
 .table .actions { white-space: nowrap; text-align: right; }
 .table .actions > * { margin-left: .4rem; }
 .table tr.dim td { color: var(--muted); }
@@ -297,7 +301,10 @@ a.stat:hover { border-color: var(--ink); }
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .btn.on { background: var(--ink); color: #fff; border-color: var(--ink); }
 .btn-sm { white-space: nowrap; }
-.who-actions { display: flex; gap: .5rem; margin-top: .7rem; flex-wrap: wrap; }
+.who-actions { display: flex; gap: .5rem; margin-top: .7rem; }
+.who-actions > * { flex: 1 1 0; min-width: 0; }
+.who-actions form { display: flex; }
+.who-actions .btn { width: 100%; padding-left: .4rem; padding-right: .4rem; }
 .who-actions form { margin: 0; }
 .toggle { position: relative; display: inline-flex; margin: 0; cursor: pointer; font-weight: 500; }
 .toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
@@ -326,7 +333,7 @@ a.stat:hover { border-color: var(--ink); }
 .warn-card { border-color: #f4b99c; background: #fff8f4; }
 .warn-card p { margin: .25rem 0 .75rem; }
 .warn-card .toolbar { margin-bottom: 0; }
-input[type=datetime-local] { min-width: 230px; }
+input[type=datetime-local] { min-width: 0; }
 
 /* ---------- shop: centered hero and filters ---------- */
 .hero { text-align: center; padding: 1.5rem 0 .5rem; }
@@ -570,10 +577,16 @@ input.narrow:not([type=checkbox]):not([type=radio]) { width: 110px; }
 .audit-table td { vertical-align: top; }
 .audit-details { min-width: 320px; max-width: 650px; }
 .audit-details summary { cursor: pointer; font-weight: 600; font-size: .8rem; margin-top: .6rem; color: #435c7c; }
-.audit-changes { margin-top: .6rem; display: grid; gap: .5rem; }
-.audit-change { display: grid; grid-template-columns: minmax(90px, 1fr) minmax(90px, 1fr) minmax(90px, 1fr); gap: .5rem; font-size: .78rem; padding: .55rem; background: #f4f6f9; border-radius: 6px; overflow-wrap: anywhere; }
-.audit-change .change-value { white-space: pre-wrap; }
-.audit-change small { display: block; color: var(--muted); font-size: .66rem; text-transform: uppercase; }
+.audit-change-list { margin: .5rem 0 0; padding: 0; list-style: none; display: grid; gap: .3rem; }
+.audit-change-list li { display: flex; flex-wrap: wrap; align-items: baseline; gap: .45rem; font-size: .78rem; padding: .35rem .55rem; background: #f5f7f9; border-radius: 6px; }
+.audit-field { min-width: 130px; color: var(--muted); }
+.audit-old { color: var(--muted); text-decoration: line-through; }
+.audit-old.is-empty { display: none; }
+.audit-arrow { color: var(--muted); }
+.audit-new { font-weight: 600; }
+.audit-proof { margin-top: .55rem; }
+.audit-proof summary { margin-top: 0; }
+.audit-meta { margin: .5rem 0 0; color: var(--muted); font-size: .72rem; font-variant-numeric: tabular-nums; }
 @media (max-width: 1100px) {
   .editor-layout { grid-template-columns: minmax(0, 1.4fr) minmax(250px, 1fr); }
   .editor-layout .field-grid { grid-template-columns: 1fr; }

@@ -92,20 +92,20 @@ def test_promo_summary_uses_existing_edit_endpoint(client):
     assert 'Campaign overview' in client.get('/admin/promos/1?view=1').text
 
 
-def test_inventory_sorts_and_filters(client, monkeypatch):
+def test_inventory_filters_by_category(client, monkeypatch):
     login(client, 'dev_admin')
     def routine(name, *args, **kw):
         if name == 'fn_list_inventory':
             from tests.test_smoke import INV
-            return [dict(INV, product_name='Zebra', current_stock=0), dict(INV, product_name='Alpha', current_stock=5)]
+            return [dict(INV, product_name='Zebra', category_name='Outerwear'),
+                    dict(INV, product_name='Alpha', category_name='Tops')]
         return fake_function(name, *args, **kw)
     monkeypatch.setattr(db, 'call_function', routine)
     html = client.get('/inventory/').text
-    assert html.index('Alpha') < html.index('Zebra')
-    html = client.get('/inventory/?stock=in').text
+    assert html.index('Alpha') < html.index('Zebra')                 # always sorted by name
+    html = client.get('/inventory/?category=Tops').text
     assert 'Alpha' in html and 'Zebra' not in html
-    html = client.get('/inventory/?sort=name_desc').text
-    assert html.index('Zebra') < html.index('Alpha')
+    assert 'name=stock' not in html and 'name=sort' not in html  # only search, category and low-stock
 
 
 def test_cart_add_keeps_search_and_category(client):

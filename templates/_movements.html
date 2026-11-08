@@ -1,10 +1,10 @@
 {% if rows %}
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>When</th>{% if not product %}<th>Product</th>{% endif %}<th>Type</th><th class="num">Change</th><th class="num">Balance</th><th>By</th><th>Order</th></tr></thead>
+  <thead><tr><th>When</th>{% if not product %}<th>Product</th><th class="num">Product ID</th>{% endif %}<th>Type</th><th class="num">Change</th><th class="num">Balance</th><th>By</th><th>Order ID</th></tr></thead>
   <tbody>{% for r in rows %}
     <tr>
       <td>{{ r.logged_at|dt }}</td>
-      {% if not product %}<td>{{ r.product_name }}</td>{% endif %}
+      {% if not product %}<td>{{ r.product_name }}</td><td class="num id-cell">{{ r.product_id }}</td>{% endif %}
       <td>{{ r.transaction_type|title }}</td>
       <td class="num">{{ '+' if r.quantity_changed > 0 }}{{ r.quantity_changed }}</td>
       <td class="num">{{ r.balance_after }}</td>

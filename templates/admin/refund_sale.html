@@ -14,7 +14,7 @@
   {% set left = i.quantity - i.quantity_refunded %}
   <div class="refund-item">
     <div>
-      <strong>{{ i.product_name }}</strong>
+      <strong>{{ i.product_name }}</strong> <span class="muted small id-cell">Product #{{ i.product_id }}</span>
       <div class="muted small">{{ i.quantity }} sold at {{ i.unit_price_at_sale|peso }}, {{ i.quantity_refunded }} refunded</div>
     </div>
     {% if can_refund and left > 0 %}

@@ -13,13 +13,14 @@
 </form>
 {% if rows %}
 <div class="table-wrap"><table class="table">
-  <thead><tr><th>Date</th><th>Name</th><th>Time in</th><th>Time out</th><th class="num">Grace</th><th>Status</th><th class="num">Hours</th><th>Note</th><th></th></tr></thead>
+  <thead><tr><th>Date</th><th class="num">Overtime ID</th><th>Name</th><th>Time in</th><th>Time out</th><th class="num">Grace</th><th>Status</th><th class="num">Hours</th><th>Note</th><th></th></tr></thead>
   <tbody>{% for r in rows %}
     <tr class="{{ 'dim' if r.status == 'Not used' else '' }}">
-      <td>{{ r.work_date.strftime('%a, %b %d, %Y') }}</td>
-      <td>{{ r.full_name }}</td>
-      <td>{{ r.start_time.strftime('%I:%M %p') }}</td>
-      <td>{{ r.end_time.strftime('%I:%M %p') }}</td>
+      <td class="date-cell">{{ r.work_date.strftime('%a, %b %d, %Y') }}</td>
+      <td class="num id-cell">{{ r.permit_id }}</td>
+      <td class="name-cell">{{ r.full_name }}</td>
+      <td class="time-cell">{{ r.start_time.strftime('%I:%M %p') }}</td>
+      <td class="time-cell">{{ r.end_time.strftime('%I:%M %p') }}</td>
       <td class="num">{{ r.grace_minutes }} min</td>
       <td><span class="badge {{ 'ok' if r.status in ('Done', 'In progress') else ('warn' if r.status == 'Allowed' else '') }}">{{ r.status }}</span></td>
       <td class="num">{{ '%.2f'|format(r.hours_worked) if r.hours_worked is not none else '' }}</td>
