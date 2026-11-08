@@ -4,6 +4,7 @@ from urllib.parse import quote
 
 import csrf
 import db
+import attendance_store
 import menu
 import utils
 from config import Config
@@ -69,7 +70,7 @@ def create_app(testing=False):
         import time
         while True:
             try:
-                db.call_function("fn_close_expired_shifts")
+                attendance_store.close_expired()
             except db.DbError:
                 app.logger.exception("Attendance closure failed; retrying")
             time.sleep(30)

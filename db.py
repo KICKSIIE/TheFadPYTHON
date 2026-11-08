@@ -1,8 +1,8 @@
 """
 All database access goes through this file.
 
-Rule for the team: the web app never runs INSERT / UPDATE / DELETE on tables.
-It only calls stored routines:
+Most modules use stored routines. Attendance is enforced in the Flask backend
+and reads and writes existing tables through this database layer:
 
     db.call_function("fn_view_discounts", "Active")          -> list of dict rows
     db.call_function("fn_login_user", user, pw, one=True)    -> one dict row or None

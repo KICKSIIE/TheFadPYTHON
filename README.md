@@ -1,6 +1,12 @@
 # The Fad - web app starter
 
-Flask + PostgreSQL. The web app only calls stored routines (see `db.py`).
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:99dc06db253d7b42055d55077033fd641e56734323fd18e97808d9d82348bef4 -->
+
+Flask + PostgreSQL. Most modules use stored routines; attendance rules run in Flask and use existing database tables (see `attendance_store.py`).
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ## 1. Database
 1. Restore your backup into a database named `THEFAD` (or use the one you already have).
@@ -34,9 +40,27 @@ Add `{{ csrf_token() }}` as a hidden `_csrf` field in every POST form.
 <!-- coderabbit-ai-generated-section:v1:97728e38f29712fd2ff3c69ca95ec1861fba3f1dc13a87f2369f75da03fcd8a1 -->
 
 ## Attendance, approvals and overtime
-- All staff, including admins, land on Attendance after sign-in. Work pages and management POSTs require an open attendance row inside its scheduled window. Disabled accounts and changed roles are checked on every protected request. Database failures deny access.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:ae0dee16de6ccfb22951b1f64d3ffb3ea89607ea04bc663a8f5b86cf9722547d -->
+
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:d1179da30df3edf496ba34e7d1b70f41b9146f24d71404a17e70c58cd5392c16 -->
+
+- All staff, including admins, land on Attendance after sign-in. Flask checks existing attendance and user tables on protected requests; it does not require `fn_staff_access` or database attendance triggers. It denies access when attendance cannot be verified. Any database triggers installed previously remain in place until separately removed by the database owner.
+
+<!-- /coderabbit-ai-generated:v1 -->
+
+<!-- /coderabbit-ai-generated:v1 -->
 - The regular schedule is Monday–Saturday in Asia/Manila. Clock in once during the scheduled window; late arrivals retain the same closing time. Actual time in is recorded for punctuality and payroll.
-- Each clock-in snapshots its end time. Schedule edits affect future clock-ins; open regular shifts keep their snapshot. Regular time is never extended by arriving late.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:7fc885763fd1d10af4cb2794e7b232764a8fd5f02b15cb9f6a768b0f6fadd41f -->
+
+- When the database has a `scheduled_end` column, clock-in snapshots the end. On older schemas without that column, schedule edits are blocked while a regular shift is open. Regular time is never extended by arriving late.
+
+<!-- /coderabbit-ai-generated:v1 -->
 - Admins authorize a separate overtime window. It cannot overlap regular hours. Once started, its end can only be extended before expiry, with a reason and admin approval. Closed records remain fixed.
 - Forgotten clock-outs close at the recorded regular/overtime end. Run the worker alongside the web app, including when nobody is browsing:
   ```sh

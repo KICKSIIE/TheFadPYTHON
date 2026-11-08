@@ -2,16 +2,20 @@
 from datetime import datetime
 
 import db
-from tests.test_smoke import client, login, token, fake_function, CALLS
+import attendance_store
+from tests.test_smoke import client, login, token, fake_function, fake_access, CALLS
 
 
 def access_mock(monkeypatch, **state):
     def call(name, *args, **kwargs):
         if name == 'fn_staff_access':
-            return dict(active=True, allowed=False, can_clock_in=False,
-                        shop_now=datetime(2026,11,9,8), shift_end=datetime(2026,11,9,17), **state)
+            result = fake_access(args[0])
+            result.update(active=True, allowed=False, can_clock_in=False,
+                          shop_now=datetime(2026,11,9,8), shift_end=datetime(2026,11,9,17))
+            result.update(state)
+            return result
         return fake_function(name, *args, **kwargs)
-    monkeypatch.setattr(db, 'call_function', call)
+    monkeypatch.setattr(attendance_store, 'get_access', lambda user_id: call('fn_staff_access', user_id, one=True))
 
 
 def test_login_always_prompts_attendance(client):
@@ -34,7 +38,7 @@ def test_off_shift_cannot_read_or_mutate_system(client, monkeypatch):
 def test_attendance_verification_fails_closed(client, monkeypatch):
     login(client, "dev_admin")
     def unavailable(*args, **kwargs): raise db.DbError('offline')
-    monkeypatch.setattr(db,'call_function',unavailable)
+    monkeypatch.setattr(attendance_store,'get_access',unavailable)
     response = client.get('/dashboard')
     assert response.status_code == 503
     assert 'Go to sign in' in response.text and 'Sign out' in response.text
@@ -71,7 +75,7 @@ def test_sign_in_reports_database_outage_without_disclosing_details(client, monk
 
 def test_inactive_session_is_revoked(client, monkeypatch):
     login(client, "dev_admin")
-    monkeypatch.setattr(db,'call_function',lambda *args, **kwargs: {'active':False})
+    monkeypatch.setattr(attendance_store,'get_access',lambda *args, **kwargs: {'active':False})
     assert client.get('/dashboard').location.endswith('/login')
     with client.session_transaction() as session: assert 'user_id' not in session
 

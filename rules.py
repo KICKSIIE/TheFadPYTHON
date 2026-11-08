@@ -11,6 +11,11 @@ def shift_rules():
     c = current_app.config
     r = {"shift_start": c["SHIFT_START"], "shift_end": c["SHIFT_END"], "grace": c["GRACE_MINUTES"],
          "shift_hours": c["SHIFT_HOURS"], "max_hours": c["MAX_SHIFT_HOURS"], "work_days": c["WORK_DAYS"]}
+    access = getattr(g, 'staff_access', None)
+    if access and 'schedule' in access:
+        r.update(access['schedule'])
+        g.shift_rules = r
+        return r
     try:
         row = db.call_function("fn_get_shift_setting", one=True)
         if row:
