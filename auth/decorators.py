@@ -3,6 +3,7 @@ from functools import wraps
 from flask import abort, current_app, flash, g, redirect, request, session, url_for
 
 import db
+import attendance_store
 
 
 def login_required(view):
@@ -16,7 +17,7 @@ def login_required(view):
             flash("Please sign in again.", "info")
             return redirect(url_for("auth.login", next=request.path))
         try:
-            access = db.call_function("fn_staff_access", session["user_id"], one=True)
+            access = attendance_store.get_access(session["user_id"])
         except db.DbError as exc:
             current_app.logger.warning("Attendance verification failed: %s", exc)
             abort(503, description="Attendance cannot be verified. Try again shortly.")

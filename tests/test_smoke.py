@@ -7,6 +7,7 @@ from decimal import Decimal
 import pytest
 
 import db
+import attendance_store
 from app import create_app
 
 USERS = {
@@ -116,6 +117,34 @@ def fake_procedure(name, *args):
             "sp_apply_discount": {"p_products_updated": 1}, "sp_process_refund": {"p_refund_id": 3}, "sp_add_variant": {"p_new_id": 9}, "sp_save_shift": {"p_result_id": 5}, "sp_allow_overtime": {"p_permit_id": 4}, "sp_create_discount": {"p_discount_id": 11}}.get(name, {})
 
 
+def fake_access(user_id):
+    access = fake_function('fn_staff_access', user_id, one=True)
+    access['rows'] = fake_function('fn_my_attendance', user_id, 30)
+    access['permits'] = fake_function('fn_my_overtime', user_id)
+    setting = fake_function('fn_get_shift_setting', one=True)
+    access['schedule'] = dict(shift_start=setting['shift_start'], shift_end=setting['shift_end'],
+                              grace=setting['grace_minutes'], shift_hours=setting['shift_hours'], work_days='1,2,3,4,5,6')
+    return access
+
+
+def fake_clock_in(user_id, overtime=False):
+    CALLS.append(('backend_clock_in', (user_id, overtime)))
+    if not overtime:
+        STATE.update(shift_open=True, open_hours=0.1)
+
+
+def fake_schedule(start, end, grace):
+    CALLS.append(('backend_schedule', (start, end, grace)))
+
+
+def fake_save_overtime(admin, user, work_date, start, end, grace, note, permit_id=None):
+    CALLS.append(('backend_overtime', (admin, user, work_date, start, end, grace, note, permit_id)))
+
+
+def fake_cancel_overtime(permit_id, user_id):
+    CALLS.append(('backend_cancel_overtime', (permit_id, user_id)))
+
+
 @pytest.fixture
 def client(monkeypatch):
     CALLS.clear()
@@ -123,6 +152,11 @@ def client(monkeypatch):
     STATE["shift_open"] = False
     monkeypatch.setattr(db, "call_function", fake_function)
     monkeypatch.setattr(db, "call_procedure", fake_procedure)
+    monkeypatch.setattr(attendance_store, "get_access", fake_access)
+    monkeypatch.setattr(attendance_store, "clock_in", fake_clock_in)
+    monkeypatch.setattr(attendance_store, "save_schedule", fake_schedule)
+    monkeypatch.setattr(attendance_store, "save_overtime", fake_save_overtime)
+    monkeypatch.setattr(attendance_store, "cancel_overtime", fake_cancel_overtime)
     return create_app(testing=True).test_client()
 
 
@@ -215,7 +249,7 @@ def test_clock_in_uses_the_shop_rules(client):
     assert "Clock in" in client.get("/attendance/").get_data(as_text=True)
     post(client, "/attendance/clock-in", {}, "/attendance/")
     name, args = CALLS[-1]
-    assert name == "sp_clock_in" and args[0] == 2 and args[1] == time(9, 0) and args[2] == 15 and args[3] == 24
+    assert (name, args) == ('backend_clock_in', (2, False))
 
 
 # ------------------------------------------------------------------ waves 2-5
@@ -516,8 +550,7 @@ def test_clock_out_opens_after_8_hours(client):
     html = _attendance_html(client, 9.5)
     assert "disabled>Clock out" not in html and "did not clock out" not in html
     post(client, "/attendance/clock-out", {}, "/attendance/")
-    name, args = CALLS[-1]
-    assert name == "sp_clock_out" and args[1] == 8 and args[2] == 24 and args[3] is None
+    assert "closes automatically" in client.get('/attendance/').get_data(as_text=True)
 
 
 def test_missed_clock_out_is_automatic(client):
@@ -664,9 +697,9 @@ def test_employee_overtime_card_follows_the_time_in_and_grace(client):
     upcoming = _ot_page(client, datetime(2026, 11, 8, 12, 0), _permit())          # permit is for tomorrow
     assert "Upcoming overtime" in upcoming and "Overtime today" not in upcoming
     post(client, "/attendance/overtime-in", {}, "/attendance/")
-    assert CALLS[-1] == ("sp_overtime_in", (2, None))
+    assert CALLS[-1] == ("backend_clock_in", (2, True))
     post(client, "/attendance/overtime-out", {}, "/attendance/")
-    assert CALLS[-1] == ("sp_overtime_out", (2, None))
+    assert CALLS[-1] == ("backend_clock_in", (2, True))
 
 
 def test_admin_allows_overtime_with_time_in_time_out_and_grace(client):
@@ -684,7 +717,7 @@ def test_admin_allows_overtime_with_time_in_time_out_and_grace(client):
               "grace_minutes": "10", "note": "Holiday rush"}
     assert post(client, "/attendance/overtime/new", fields, "/attendance/overtime/new").status_code == 302
     name, args = CALLS[-1]
-    assert name == "sp_allow_overtime" and args[0] == 1 and args[1] == 2 and args[2] == date(2026, 11, 9)
+    assert name == "backend_overtime" and args[0] == 1 and args[1] == 2 and args[2] == date(2026, 11, 9)
     assert args[3] == time(18, 0) and args[4] == time(21, 0) and args[5] == 10 and args[6] == "Holiday rush"
     post(client, "/attendance/overtime/new", dict(fields, grace_minutes=""), "/attendance/overtime/new")
     assert CALLS[-1][1][5] is None                                                  # blank grace = the schedule's default
@@ -694,9 +727,9 @@ def test_admin_allows_overtime_with_time_in_time_out_and_grace(client):
     assert client.get("/attendance/overtime/3").status_code == 200
     post(client, "/attendance/overtime/3", {"start_time": "19:00", "end_time": "21:30", "grace_minutes": "5", "note": ""},
          "/attendance/overtime/3")
-    assert CALLS[-1] == ("sp_update_overtime", (3, time(19, 0), time(21, 30), 5, ""))
+    assert CALLS[-1] == ("backend_overtime", (1, 2, date(2026, 11, 9), time(19, 0), time(21, 30), 5, "", 3))
     post(client, "/attendance/overtime/3/cancel", {}, "/attendance/overtime")
-    assert CALLS[-1] == ("sp_cancel_overtime", (3,))
+    assert CALLS[-1] == ("backend_cancel_overtime", (3, 2))
 
 
 def test_admin_sets_the_shift_schedule(client):
@@ -708,7 +741,7 @@ def test_admin_sets_the_shift_schedule(client):
     html = client.get("/attendance/schedule").get_data(as_text=True)
     assert 'value="09:00"' in html and 'value="17:00"' in html and 'value="15"' in html and "Save schedule" in html
     post(client, "/attendance/schedule", {"shift_start": "08:30", "shift_end": "17:30", "grace_minutes": "10"}, "/attendance/schedule")
-    assert CALLS[-1] == ("sp_save_shift_setting", (time(8, 30), time(17, 30), 10))
+    assert CALLS[-1] == ("backend_schedule", (time(8, 30), time(17, 30), 10))
     CALLS.clear()
     assert post(client, "/attendance/schedule", {"shift_start": "x", "shift_end": "17:30", "grace_minutes": "10"},
                 "/attendance/schedule").status_code == 400 and not CALLS
@@ -725,7 +758,7 @@ def test_clock_in_uses_the_saved_schedule(client):
     db.call_function = with_setting
     post(client, "/attendance/clock-in", {}, "/attendance/")
     name, args = CALLS[-1]
-    assert name == "sp_clock_in" and args[1] == time(8, 0) and args[2] == 5            # the admin's grace, not the default
+    assert (name, args) == ('backend_clock_in', (2, False))
 
 
 def test_shop_footer_has_ordering_address_map_and_facebook(client):

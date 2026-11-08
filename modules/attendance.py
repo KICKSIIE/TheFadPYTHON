@@ -5,6 +5,7 @@ from flask import (Blueprint, abort, flash, redirect, render_template,
                    request, session, url_for, g)
 
 import db
+import attendance_store
 from auth.decorators import login_required, role_required
 from rules import shift_rules, shop_now
 
@@ -41,13 +42,9 @@ def _overtime_state(permit, regular_open, now):
 @login_required
 def index():
     r = shift_rules()
-    shift, limit = float(r["shift_hours"]), float(r["max_hours"])
-    try:
-        rows = db.call_function("fn_my_attendance", session["user_id"], 30)
-        permits = db.call_function("fn_my_overtime", session["user_id"])
-    except db.DbError as exc:
-        flash(str(exc), "error")
-        rows, permits = [], []
+    shift = float(r["shift_hours"])
+    rows = g.staff_access["rows"]
+    permits = g.staff_access["permits"]
     now = g.staff_access["shop_now"]
     open_row = next((x for x in rows if x["shift_type"] == "Regular" and x["time_out"] is None), None)
     st = {}
@@ -67,9 +64,8 @@ def index():
 @bp.route("/clock-in", methods=["POST"])
 @login_required
 def clock_in():
-    r = shift_rules()
     try:
-        db.call_procedure("sp_clock_in", session["user_id"], r["shift_start"], r["grace"], r["max_hours"], None)
+        attendance_store.clock_in(session["user_id"])
         flash("Clocked in.", "success")
     except db.DbError as exc:
         flash(str(exc), "error")
@@ -79,12 +75,12 @@ def clock_in():
 @bp.route("/clock-out", methods=["POST"])
 @login_required
 def clock_out():
-    r = shift_rules()
-    try:
-        db.call_procedure("sp_clock_out", session["user_id"], r["shift_hours"], r["max_hours"], None, None)
-        flash("Clocked out.", "success")
-    except db.DbError as exc:
-        flash(str(exc), "error")
+    rows = g.staff_access['rows']
+    today = g.staff_access['shop_now'].date()
+    if any(r['shift_type'] == 'Regular' and r['time_in'].date() == today and r['time_out'] for r in rows):
+        flash('Your shift has closed.', 'success')
+    else:
+        flash('Your shift closes automatically at the scheduled end.', 'info')
     return redirect(url_for("attendance.index"))
 
 
@@ -92,7 +88,7 @@ def clock_out():
 @login_required
 def overtime_in():
     try:
-        db.call_procedure("sp_overtime_in", session["user_id"], None)
+        attendance_store.clock_in(session["user_id"], overtime=True)
         flash("Overtime started.", "success")
     except db.DbError as exc:
         flash(str(exc), "error")
@@ -102,11 +98,7 @@ def overtime_in():
 @bp.route("/overtime-out", methods=["POST"])
 @login_required
 def overtime_out():
-    try:
-        db.call_procedure("sp_overtime_out", session["user_id"], None)
-        flash("Overtime ended.", "success")
-    except db.DbError as exc:
-        flash(str(exc), "error")
+    flash('Overtime closes automatically at the approved end.', 'info')
     return redirect(url_for("attendance.index"))
 
 
@@ -244,8 +236,8 @@ def new_overtime():
         try:
             start, end, grace, note = _overtime_fields()
             work_date = date.fromisoformat(request.form.get("work_date", ""))
-            db.call_procedure("sp_allow_overtime", session["user_id"], int(request.form.get("user_id", "")),
-                              work_date, start, end, grace, note, None)
+            attendance_store.save_overtime(session["user_id"], int(request.form.get("user_id", "")),
+                                           work_date, start, end, grace, note)
             flash("Overtime allowed.", "success")
             return redirect(url_for("attendance.overtime"))
         except (ValueError, db.DbError) as exc:
@@ -270,7 +262,8 @@ def edit_overtime(permit_id):
     if request.method == "POST":
         try:
             start, end, grace, note = _overtime_fields()
-            db.call_procedure("sp_update_overtime", permit_id, start, end, grace, note)
+            attendance_store.save_overtime(session["user_id"], row["user_id"], row["work_date"],
+                                           start, end, grace, note, permit_id=permit_id)
             flash("Overtime saved.", "success")
             return redirect(url_for("attendance.overtime"))
         except (ValueError, db.DbError) as exc:
@@ -288,7 +281,10 @@ def edit_overtime(permit_id):
 @role_required("AD")
 def cancel_overtime(permit_id):
     try:
-        db.call_procedure("sp_cancel_overtime", permit_id)
+        row = db.call_function("fn_get_overtime", permit_id, one=True)
+        if not row:
+            abort(404)
+        attendance_store.cancel_overtime(permit_id, row["user_id"])
         flash("Overtime cancelled.", "success")
     except db.DbError as exc:
         flash(str(exc), "error")
@@ -302,8 +298,8 @@ def schedule():
     if request.method == "POST":
         try:
             f = request.form
-            db.call_procedure("sp_save_shift_setting", time.fromisoformat(f.get("shift_start", "")),
-                              time.fromisoformat(f.get("shift_end", "")), int(f.get("grace_minutes", "")))
+            attendance_store.save_schedule(time.fromisoformat(f.get("shift_start", "")),
+                                           time.fromisoformat(f.get("shift_end", "")), int(f.get("grace_minutes", "")))
             flash("Schedule saved.", "success")
             return redirect(url_for("attendance.schedule"))
         except ValueError:

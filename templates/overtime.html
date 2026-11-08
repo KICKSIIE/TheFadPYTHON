@@ -25,8 +25,10 @@
       <td class="num">{{ '%.2f'|format(r.hours_worked) if r.hours_worked is not none else '' }}</td>
       <td class="muted small">{{ r.note or '' }}</td>
       <td class="actions">
-        {% if r.status == 'Allowed' %}
+        {% if r.status in ('Allowed', 'In progress') %}
         <a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_overtime', permit_id=r.permit_id) }}">Edit</a>
+        {% endif %}
+        {% if r.status == 'Allowed' %}
         <form method="post" class="inline" action="{{ url_for('attendance.cancel_overtime', permit_id=r.permit_id) }}" onsubmit="return confirm('Cancel this overtime?');">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Cancel</button>
         </form>
