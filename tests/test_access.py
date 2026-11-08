@@ -1,4 +1,5 @@
 """Exercise the access and approval boundaries independently of the page fixtures."""
+import re
 from datetime import datetime
 
 import db
@@ -26,7 +27,7 @@ def test_login_always_prompts_attendance(client):
 def test_off_shift_cannot_read_or_mutate_system(client, monkeypatch):
     login(client, "dev_admin")
     access_mock(monkeypatch)
-    for path in ['/dashboard','/admin/products/','/attendance/schedule','/admin/audit/','/admin/payroll/']:
+    for path in ['/dashboard','/admin/products/','/attendance/schedule','/admin/audit/']:
         assert client.get(path).location.endswith('/attendance/')
     response=client.post('/admin/products/new', data={'product_name':'Hidden','approval_pin':'123456','_csrf':token(client,'/attendance/')})
     assert response.location.endswith('/attendance/')
@@ -42,20 +43,25 @@ def test_attendance_verification_fails_closed(client, monkeypatch):
     response = client.get('/dashboard')
     assert response.status_code == 503
     assert 'Go to sign in' in response.text and 'Sign out' in response.text
-    assert client.get('/login').status_code == 200
+    # A signed-in visitor is sent into the app, never back to a second sign-in form.
+    page = client.get('/login')
+    assert page.status_code == 302 and page.location.endswith('/attendance/')
+    csrf = re.search(r'name="_csrf" value="([^"]+)"', response.text).group(1)
     # Signing out does not depend on the database or weaken the attendance gate.
-    response = client.post('/logout', data={'_csrf': token(client, '/login')})
+    response = client.post('/logout', data={'_csrf': csrf})
     assert response.location.endswith('/login')
     with client.session_transaction() as session:
         assert 'user_id' not in session
 
 
-def test_login_is_available_with_existing_session(client):
+def test_signed_in_visitor_skips_the_sign_in_screen(client):
     login(client, 'dev_admin')
     page = client.get('/login')
-    assert page.status_code == 200 and 'Signed in as Dev Admin' in page.text
-    response = client.post('/login', data={'username': 'dev_cashier', 'password': 'pw',
-                                           '_csrf': token(client, '/login')})
+    assert page.status_code == 302 and page.location.endswith('/attendance/')
+    # Switching accounts is still possible: sign out, then sign in as someone else.
+    with client.session_transaction() as session:
+        session.clear()
+    response = login(client, 'dev_cashier')
     assert response.location.endswith('/attendance/')
     with client.session_transaction() as session:
         assert session['username'] == 'dev_cashier'

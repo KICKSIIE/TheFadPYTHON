@@ -6,7 +6,6 @@
 <form class="form" method="post" action="{{ url_for('attendance.schedule') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <h2 class="flush">Regular shift</h2>
-  <p class="muted">Monday–Saturday, Asia/Manila. Saved changes apply to future clock-ins. Open shifts keep their recorded end; use approved overtime to extend work.</p>
   <div class="two">
     <div><label for="shift_start">Time in</label><input id="shift_start" name="shift_start" type="time" value="{{ s.shift_start }}" required></div>
     <div><label for="shift_end">Time out</label><input id="shift_end" name="shift_end" type="time" value="{{ s.shift_end }}" required></div>

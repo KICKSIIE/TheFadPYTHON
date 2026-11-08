@@ -9,19 +9,16 @@
 </section>
 
 <div class="shop-layout">
-<aside class="shop-categories" aria-label="Categories">
+<section class="shop-categories" aria-label="Categories">
 <h2>Categories</h2>
-<form class="filters" method="get" action="{{ url_for('catalog.index') }}">
-  <input type="hidden" name="category" value="{{ category or '' }}">
-  <div class="pills" role="group" aria-label="Categories">
-    <a class="pill {{ '' if category else 'on' }}" href="{{ url_for('catalog.index', q=q or None, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">All</a>
-    {% for c in categories %}
-    <a class="pill {{ 'on' if category == c.category_id else '' }}"
-       href="{{ url_for('catalog.index', q=q or None, category=c.category_id, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">{{ c.category_name }}</a>
-    {% endfor %}
-  </div>
-</form>
-</aside>
+<div class="pills" role="group" aria-label="Categories">
+  <a class="pill {{ '' if category else 'on' }}" href="{{ url_for('catalog.index', q=q or None, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">All</a>
+  {% for c in categories %}
+  <a class="pill {{ 'on' if category == c.category_id else '' }}"
+     href="{{ url_for('catalog.index', q=q or None, category=c.category_id, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">{{ c.category_name }}</a>
+  {% endfor %}
+</div>
+</section>
 <div class="shop-results">
 <form class="filters" method="get" action="{{ url_for('catalog.index') }}">
   <input type="hidden" name="category" value="{{ category or '' }}">

@@ -555,7 +555,7 @@ def test_clock_out_opens_after_8_hours(client):
 
 def test_missed_clock_out_is_automatic(client):
     html = _attendance_html(client, 30)
-    assert "Forgotten clock-outs close automatically" in html
+    assert "Recent shifts" in html
     assert 'type="datetime-local"' not in html
     assert client.post("/attendance/missed-clock-out", data={"_csrf": token(client, "/attendance/")}).status_code == 404
 
@@ -625,10 +625,11 @@ def test_navigation_has_no_repeated_shortcuts(client):
     login(client, "dev_admin")
     html = client.get("/dashboard").get_data(as_text=True)
     assert html.count("New sale") == 1 and 'class="topline"' not in html and "Today's orders" not in html
-    assert "View shop" in html and "Sign out" in html and "Payroll" in html
+    assert "View shop" in html and "Sign out" in html and "Payroll" not in html
     import menu
     cashier = [i["label"] for g in menu.groups_for("CA") for i in g["items"]]
-    assert "New sale" in cashier and "Payroll" not in cashier and "Payroll" in [i["label"] for g in menu.groups_for("AD") for i in g["items"]]
+    admin = [i["label"] for g in menu.groups_for("AD") for i in g["items"]]
+    assert "New sale" in cashier and "Payroll" not in cashier and "Payroll" not in admin
 
 
 def test_layouts_use_the_full_screen_width():
@@ -710,7 +711,7 @@ def test_admin_allows_overtime_with_time_in_time_out_and_grace(client):
     login(client, "dev_admin")
     html = client.get("/attendance/overtime").get_data(as_text=True)
     assert "Allow overtime" in html and "06:00 PM" in html and "Allowed" in html and "Done" in html
-    assert html.count(">Cancel</button>") == 1                                     # only the unused one can be cancelled
+    assert html.count('data-title="Cancel overtime"') == 1                          # only the unused one can be cancelled
     form = client.get("/attendance/overtime/new").get_data(as_text=True)
     assert 'name="start_time"' in form and 'name="end_time"' in form and 'name="grace_minutes"' in form
     fields = {"user_id": "2", "work_date": "2026-11-09", "start_time": "18:00", "end_time": "21:00",
@@ -775,12 +776,12 @@ def test_shop_footer_has_ordering_address_map_and_facebook(client):
     assert 'class="site-foot"' not in client.get("/login", follow_redirects=True).get_data(as_text=True)
 
 
-def test_shop_categories_are_on_the_left(client):
+def test_shop_categories_sit_above_the_products(client):
     html = client.get("/").get_data(as_text=True)
     assert html.index('class="shop-categories"') < html.index('class="shop-results"')
 
 
-def test_payroll_summary_is_registered(client):
+def test_payroll_is_removed(client):
     login(client, "dev_admin")
-    assert client.get("/admin/payroll/").status_code == 200
-    assert client.get("/admin/payroll/download").status_code == 200
+    assert client.get("/admin/payroll/").status_code == 404
+    assert client.get("/admin/payroll/download").status_code == 404

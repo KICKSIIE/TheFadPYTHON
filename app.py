@@ -25,7 +25,7 @@ def create_app(testing=False):
 
     @app.template_filter("dt")
     def fmt_dt(value):
-        return "" if value is None else value.strftime("%b %d, %Y %I:%M %p")
+        return "" if value is None else value.strftime("%b %d, %Y \u00b7 %I:%M %p")
 
     app.add_template_filter(utils.color_hex, "color_hex")
 
@@ -59,7 +59,7 @@ def create_app(testing=False):
         except db.DbError:
             abort(503)
         if not verified or not verified["verified"]:
-            flash("A valid admin approval PIN is required. Set your PIN in Account & security. Five failed attempts lock it for 15 minutes.", "error")
+            flash("A valid admin approval PIN is required. Set your PIN in Account & security.", "error")
             return render_template("error.html", code=403, heading="Admin approval required",
                                    message="Return to the form and enter a valid approval PIN. Your change was not saved."), 403
         session["approval_actor"] = username

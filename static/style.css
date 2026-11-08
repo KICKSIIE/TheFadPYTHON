@@ -19,7 +19,7 @@ code { background: #eceff3; padding: .1rem .35rem; border-radius: 4px; font-size
 .small { font-size: .85rem; }
 .flush { margin-top: 0; }
 .warn-text { color: var(--warn-ink); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; scroll-behavior: auto !important; } }
 
 /* ---------- buttons, links, badges ---------- */
@@ -48,11 +48,11 @@ code { background: #eceff3; padding: .1rem .35rem; border-radius: 4px; font-size
 .swatch { display: inline-block; border-radius: 50%; border: 1px solid rgba(18,20,26,.22); vertical-align: middle; flex: none; }
 .swatch.sm { width: 12px; height: 12px; } .swatch.md { width: 18px; height: 18px; } .swatch.lg { width: 28px; height: 28px; }
 .with-swatch { display: inline-flex; align-items: center; gap: .45rem; }
-.stitch { border-top: 2px dashed var(--accent); margin: 1rem 0 1.5rem; width: 56px; }
 .empty { color: var(--muted); padding: 1.5rem; border: 1px dashed var(--line-2); border-radius: var(--radius); background: #fff; text-align: center; }
 .flash { padding: .75rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; border: 1px solid var(--line); background: #fff; }
 .flash.error { border-color: #f0b8b3; background: #fff4f3; color: var(--danger); }
 .flash.success { border-color: #b4e3d0; background: #f0faf5; color: var(--ok); }
+.proto-note { padding: .6rem 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem; border: 1px solid #f0d28a; background: #fff8e6; color: #6b4c00; font-size: .85rem; font-weight: 600; }
 
 /* ---------- brand ---------- */
 .brand { font-weight: 700; font-size: 1.3rem; letter-spacing: -.03em; text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: .25rem; }
@@ -187,7 +187,7 @@ a.tile:hover { border-color: var(--ink); }
 label { display: block; font-weight: 600; font-size: .88rem; margin: 1rem 0 .35rem; }
 input, select, textarea { font: inherit; color: var(--ink); }
 input:not([type=checkbox]):not([type=radio]), select, textarea { width: 100%; padding: .6rem .75rem; border: 1px solid var(--line-2); border-radius: var(--radius-sm); background: #fff; }
-input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--ink); outline-offset: 0; border-color: transparent; }
 input[type=checkbox] { width: auto; accent-color: var(--ink); }
 input[type=file] { padding: .45rem; }
 textarea { resize: vertical; }
@@ -195,7 +195,7 @@ textarea { resize: vertical; }
 .toolbar input.narrow, input.narrow { width: 90px; min-width: 0; }
 .check { display: inline-flex; align-items: center; gap: .45rem; margin: 0; font-weight: 500; font-size: .9rem; }
 .form { max-width: 440px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius); padding: 1.5rem; }
-.form.wide { max-width: 600px; }
+.form.wide { max-width: 760px; }
 .form.flat { border: 0; padding: 0; max-width: none; background: transparent; }
 .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-actions { display: flex; gap: .6rem; margin-top: 1.4rem; }
@@ -238,7 +238,7 @@ a.stat:hover { border-color: var(--ink); }
 .chart { display: flex; align-items: flex-end; gap: .75rem; height: clamp(200px, 30vh, 360px); margin-top: 1rem; }
 .bar-col { flex: 1; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: .3rem; min-width: 0; }
 .bar { width: 100%; max-width: 72px; background: var(--ink); border-radius: 6px 6px 2px 2px; display: block; min-height: 3px; }
-.bar-col:last-child .bar { background: var(--accent); }
+.bar-col:last-child .bar { background: var(--ink); }
 .bar-val { font-size: .68rem; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 .bar-day { font-size: .78rem; color: var(--muted); }
 .top-list { list-style: none; margin: .75rem 0 0; padding: 0; display: grid; gap: .1rem; counter-reset: rank; }
@@ -276,7 +276,7 @@ a.stat:hover { border-color: var(--ink); }
 .lb-img { height: 86vh; width: auto; max-width: 94vw; object-fit: contain; }
 .lb-btn { position: absolute; background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: .55rem 1rem; cursor: pointer; font: inherit; }
 .lb-btn:hover { background: rgba(255,255,255,.22); }
-.lb-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lb-btn:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .lb-close { top: 1rem; left: 1rem; }
 .lb-prev, .lb-next { top: 50%; transform: translateY(-50%); font-size: 1.8rem; line-height: 1; padding: .35rem .95rem; }
 .lb-prev { left: 1rem; } .lb-next { right: 1rem; }
@@ -395,29 +395,101 @@ input.narrow:not([type=checkbox]):not([type=radio]) { width: 110px; }
 .search-suggestions a:hover, .search-suggestions a:focus { background: #f0f2f5; }
 .search-suggestions p { padding: .5rem; margin: 0; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
-.shop-layout { display: grid; grid-template-columns: 190px minmax(0, 1fr); gap: 2.5rem; align-items: start; }
-.shop-categories { position: sticky; top: 6rem; }
-.shop-categories h2 { font-size: 1rem; margin: 1rem 0; }
-.shop-categories .pills { display: flex; flex-direction: column; width: 100%; }
-.shop-categories .pill { border-radius: 8px; }
+.shop-layout { display: block; }
+.shop-categories { margin: 0 auto 1.5rem; max-width: 1100px; }
+.shop-categories h2 { margin: 0 0 .7rem; font-size: .78rem; letter-spacing: .09em; text-transform: uppercase; color: var(--muted); text-align: center; }
+.shop-categories .pills { display: flex; flex-direction: row; justify-content: center; flex-wrap: wrap; gap: .5rem; }
+.shop-categories .pill { border-radius: 999px; }
 .shop-results { min-width: 0; }
-.shop-results .cards { grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); justify-content: start; }
+.shop-results .filters { justify-items: center; text-align: center; }
+.shop-results .filter-row { justify-content: center; }
+.shop-results .cards { grid-template-columns: repeat(auto-fit, minmax(230px, 320px)); justify-content: center; }
 .shop-results .section-title:first-child { margin-top: 1rem; }
+.shop-results .section-title, .shop-results .results { text-align: center; }
+.page-back { margin: 0 0 .75rem; }
+.tile .badge { align-self: flex-start; }
+.receipt-head .receipt-logo { margin-left: auto; margin-right: auto; }
 .form label { display: block; margin: 1.1rem 0 .45rem; }
 .form .two { gap: 1.25rem; }
 .form .two label { margin-top: 0; }
 .form .two { margin-top: 1.25rem; }
 .form-actions { display: flex; gap: .75rem; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--line); }
 .account-link { display: inline-block; color: white; margin-top: .75rem; font-size: .85rem; }
-.approval-fields { border: 1px solid var(--line); border-radius: 8px; padding: .75rem; margin: .75rem 0; min-width: 0; }
-.approval-fields input { max-width: 240px; }
-.audit-detail { max-width: 650px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Forms: responsive two-column field grid. */
+.field-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.05rem 1.4rem; margin-top: .35rem; }
+.field-grid .field { min-width: 0; }
+.field-grid .field label, .field-grid label { margin: 0 0 .35rem; }
+.field-grid .span-2 { grid-column: 1 / -1; }
+
+/* Admin approval: a labeled section with a thin rule, never a nested card. */
+.approval-section { margin-top: 1.6rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.approval-section > h3 { margin: 0 0 .7rem; font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.approval-fields { display: flex; flex-wrap: wrap; align-items: flex-end; gap: .7rem 1.1rem; margin: 0; min-width: 0; }
+.approval-fields .field { display: flex; flex-direction: column; gap: .2rem; min-width: 0; }
+.approval-fields .field label { margin: 0; font-size: .75rem; font-weight: 600; color: var(--muted); }
+.approval-fields .field input { width: 100%; max-width: 200px; padding: .5rem .65rem; font-size: .9rem; }
+.approval-fields .field input[type=text] { max-width: 220px; }
+.field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: .5rem; }
+.reveal { background: none; border: 0; padding: 0; color: var(--muted); font: inherit; font-size: .75rem; text-decoration: underline; cursor: pointer; }
+.reveal:hover { color: var(--ink); }
+.form.medium { max-width: 560px; }
+/* A toolbar keeps the approval block on one line with the other controls. */
+.toolbar .approval-section { display: flex; align-items: center; gap: .5rem; border: 0; margin: 0; padding: 0; }
+.toolbar .approval-section > h3 { display: none; }
+.toolbar .approval-fields { align-items: center; gap: .5rem; }
+.toolbar .approval-fields .field { flex-direction: row; align-items: center; gap: .35rem; }
+.toolbar .approval-fields .field label { white-space: nowrap; }
+.toolbar .approval-fields .field input { max-width: 140px; }
+
+/* Inside a table's action cell a form keeps its compact inline shape. */
+.table .actions { white-space: normal; text-align: right; }
+.table .actions form.inline { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: .4rem; vertical-align: middle; }
+.table .approval-section { display: inline-flex; align-items: center; gap: .4rem; border: 0; margin: 0; padding: 0; }
+.table .approval-section > h3, .table .reveal { display: none; }
+.table .approval-fields { flex-wrap: nowrap; align-items: center; gap: .35rem; }
+.table .approval-fields .field { flex-direction: row; align-items: center; gap: .35rem; }
+.table .approval-fields .field label { font-size: .72rem; }
+.table .approval-fields .field input { width: 108px; max-width: 108px; padding: .28rem .5rem; font-size: .82rem; }
+.table th.actions-head { text-align: right; }
+
+/* Confirmation modal used for destructive actions. */
+.modal { border: 0; border-radius: 16px; padding: 0; width: min(440px, 92vw); box-shadow: 0 24px 60px rgba(16, 19, 25, .28); }
+.modal::backdrop { background: rgba(16, 19, 25, .45); }
+.modal-body { padding: 1.5rem 1.6rem 1.3rem; }
+.modal-title { margin: 0 0 .4rem; font-size: 1.15rem; }
+.modal-copy { margin: 0 0 1.2rem; color: var(--muted); }
+.modal-field { margin-top: .2rem; }
+.modal-field label { margin: 0 0 .4rem; }
+.modal-field input { max-width: 200px; }
+.modal-actions { display: flex; justify-content: flex-end; gap: .6rem; margin-top: 1.5rem; }
+.btn-danger-solid { background: var(--danger); border-color: var(--danger); color: #fff; }
+.btn-danger-solid:hover { background: #a52c24; }
+
+/* Cart: one clear action stack, never two buttons touching. */
+.cart-actions { display: grid; gap: .6rem; margin-top: 1.25rem; }
+.cart-actions .btn.block, .cart-clear .btn.block { margin-top: 0; }
+.cart-clear { margin-top: .6rem; }
+
+/* Receipt */
+.receipt-head { text-align: center; }
+.receipt-head p { margin: 0; }
+.receipt-head .small { color: var(--muted); }
+.receipt-tag { margin: .1rem 0 .5rem !important; font-size: .88rem; color: var(--muted); }
+.receipt-rule { border-top: 1px dashed var(--line-2); margin: 1rem 0; }
+.receipt-meta { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem 1.5rem; margin: 0; }
+.receipt-meta div { display: flex; justify-content: space-between; gap: .75rem; }
+.receipt-meta dt { color: var(--muted); font-size: .85rem; }
+.receipt-meta dd { margin: 0; font-weight: 600; font-size: .88rem; text-align: right; }
+.receipt-customer { margin: 1rem 0 0; }
+.receipt-customer p { margin: 0; }
+.receipt-label { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: .2rem !important; }
+.receipt-foot { text-align: center; }
+.receipt-foot p { margin: 0 0 .35rem; color: var(--muted); }
+.receipt-thanks { color: var(--ink) !important; font-weight: 700; }
 @media (max-width: 800px) {
   .site-head .wrap { grid-template-columns: 1fr auto; gap: .75rem; }
   .site-search { grid-column: 1 / -1; order: 3; }
-  .shop-layout { grid-template-columns: 1fr; gap: .75rem; }
-  .shop-categories { position: static; }
-  .shop-categories .pills { flex-direction: row; }
   .shop-results .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.2rem .75rem; }
 }
 

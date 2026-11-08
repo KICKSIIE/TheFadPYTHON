@@ -61,11 +61,13 @@
       <td>{% if not p.is_active %}<span class="badge">Inactive</span>{% elif p.discount_name %}<span class="badge promo">{{ p.discount_percentage }}% off</span>{% else %}Active{% endif %}</td>
       <td class="actions">
         <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=p.product_id) }}">Edit</a>
-        <form method="post" class="inline" action="{{ url_for('admin_products.set_active', product_id=p.product_id) }}">
-          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <input type="hidden" name="active" value="{{ '0' if p.is_active else '1' }}">
-          <button class="btn btn-sm {{ 'btn-danger' if p.is_active else 'btn-quiet' }}" type="submit">{{ 'Deactivate' if p.is_active else 'Reactivate' }}</button>
-        </form>
+        <button class="btn btn-sm {{ 'btn-danger' if p.is_active else 'btn-quiet' }}" type="button"
+                data-confirm data-action="{{ url_for('admin_products.set_active', product_id=p.product_id) }}"
+                data-title="{{ 'Deactivate product' if p.is_active else 'Reactivate product' }}"
+                data-confirm-label="{{ 'Deactivate' if p.is_active else 'Reactivate' }}"
+                data-danger="{{ '1' if p.is_active else '0' }}"
+                data-fields='{{ {"active": "0" if p.is_active else "1"}|tojson }}'
+                data-message="{{ ('Deactivate ' ~ p.product_name ~ '? It leaves the shop and can no longer be sold.') if p.is_active else ('Reactivate ' ~ p.product_name ~ '? It returns to the shop.') }}">{{ 'Deactivate' if p.is_active else 'Reactivate' }}</button>
       </td>
     </tr>
   {% endfor %}

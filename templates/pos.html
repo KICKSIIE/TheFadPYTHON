@@ -68,9 +68,14 @@
         <input id="customer_contact" name="customer_contact" maxlength="20">
         <label for="delivery_address">Delivery address</label>
         <input id="delivery_address" name="delivery_address" maxlength="255">
-        <button class="btn block" type="submit">Complete sale</button>
+        <div class="cart-actions">
+          <button class="btn block" type="submit">Complete sale</button>
+        </div>
       </form>
-      <form method="post" action="{{ url_for('pos.clear') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-quiet" type="submit">Clear cart</button></form>
+      <form method="post" action="{{ url_for('pos.clear') }}" class="cart-clear">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <button class="btn btn-quiet block" type="submit">Clear cart</button>
+      </form>
     {% else %}
       <p class="empty">The cart is empty. Add products from the list.</p>
     {% endif %}

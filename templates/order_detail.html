@@ -10,14 +10,33 @@
   </div>
 </div>
 <div class="receipt">
-  <img class="receipt-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="The Fad">
-  <p class="muted small">{{ sale.sale_date|dt }} &middot; {{ sale.cashier }}</p>
-  <p><span class="badge {{ 'ok' if sale.order_status == 'Completed' else '' }}">{{ sale.order_status|label }}</span>
-     {{ sale.fulfillment_type }}, paid by {{ sale.payment_method }}</p>
+  <header class="receipt-head">
+    <img class="receipt-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="{{ store.name }}">
+    <p class="receipt-brand">{{ store.name }}</p>
+    <p class="receipt-tag">{{ store.tagline }}</p>
+    <p class="small">{{ store.address }}<br>Plus Code {{ store.plus_code }}</p>
+    <p class="small">Facebook: {{ store.facebook.replace('https://', '').replace('http://', '').rstrip('/') }}</p>
+  </header>
+  <div class="receipt-rule"></div>
+  <dl class="receipt-meta">
+    <div><dt>Receipt no.</dt><dd>#{{ sale.sale_id }}</dd></div>
+    <div><dt>Date</dt><dd>{{ sale.sale_date|dt }}</dd></div>
+    <div><dt>Cashier</dt><dd>{{ sale.cashier }}</dd></div>
+    <div><dt>Order</dt><dd>{{ sale.fulfillment_type }}</dd></div>
+    <div><dt>Payment</dt><dd>{{ sale.payment_method }}</dd></div>
+    <div><dt>Status</dt><dd>{{ sale.order_status|label }}</dd></div>
+  </dl>
   {% if sale.fulfillment_type == 'Delivery' %}
-  <p class="small">{{ sale.customer_name }}, {{ sale.customer_contact }}<br>{{ sale.delivery_address }}
-    {% if sale.rider_service %}<br>Rider: {{ sale.rider_service }}, {{ sale.rider_contact }}{% endif %}</p>
-  {% elif sale.customer_name %}<p class="small">{{ sale.customer_name }}</p>{% endif %}
+  <div class="receipt-customer">
+    <p class="receipt-label">Deliver to</p>
+    <p>{{ sale.customer_name }}{% if sale.customer_contact %} &middot; {{ sale.customer_contact }}{% endif %}</p>
+    <p class="small">{{ sale.delivery_address }}</p>
+    {% if sale.rider_service %}<p class="small">Rider: {{ sale.rider_service }}{% if sale.rider_contact %} &middot; {{ sale.rider_contact }}{% endif %}</p>{% endif %}
+  </div>
+  {% elif sale.customer_name %}
+  <div class="receipt-customer"><p class="receipt-label">Customer</p><p>{{ sale.customer_name }}</p></div>
+  {% endif %}
+  <div class="receipt-rule"></div>
   <table class="table compact">
     <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead>
     <tbody>{% for i in items %}
@@ -32,6 +51,12 @@
       <tr><td colspan="3"><strong>Total</strong></td><td class="num"><strong>{{ sale.total_amount|peso }}</strong></td></tr>
     </tfoot>
   </table>
+  <div class="receipt-rule"></div>
+  <footer class="receipt-foot">
+    <p class="receipt-thanks">Thank you for shopping with {{ store.name }}.</p>
+    <p class="small">Questions or sizing help? Message us on Facebook: {{ store.facebook.replace('https://', '').replace('http://', '').rstrip('/') }}</p>
+    <p class="small">{{ store.address }}</p>
+  </footer>
 </div>
 
 <div class="no-print">

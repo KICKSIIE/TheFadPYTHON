@@ -1,0 +1,18 @@
+{# Confirmation modal for destructive admin actions. Opened by [data-confirm] buttons. #}
+<dialog class="modal" id="approval-modal" aria-labelledby="approval-modal-title">
+  <form class="modal-body" id="approval-form" method="post">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <div id="approval-extra"></div>
+    <h2 class="modal-title" id="approval-modal-title">Confirm</h2>
+    <p class="modal-copy" id="approval-modal-copy"></p>
+    <div class="field modal-field">
+      <label for="modal-pin">Approval PIN</label>
+      <input id="modal-pin" name="approval_pin" type="password" inputmode="numeric" pattern="[0-9]{6,12}"
+             placeholder="6-12 digits" autocomplete="off" required>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-quiet" type="button" data-close>Cancel</button>
+      <button class="btn" type="submit" id="approval-confirm">Confirm</button>
+    </div>
+  </form>
+</dialog>

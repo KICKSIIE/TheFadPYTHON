@@ -2,17 +2,30 @@
 {% block title %}Audit log{% endblock %}
 {% block content %}
 <div class="head"><h1>Audit log</h1></div>
-<p class="muted">Database changes with staff identity, approving admin and before/after details. Credentials and photo data are excluded.</p>
 <form class="toolbar" method="get">
   <input type="date" name="start" value="{{ filters.start }}" aria-label="From" required>
   <input type="date" name="end" value="{{ filters.end }}" aria-label="To" required>
   <input name="actor" value="{{ filters.actor }}" placeholder="Staff username" aria-label="Staff username">
-  <select name="entity" aria-label="Entity"><option value="">All entities</option>{% for name in ['product','category','users','discount','sales','sale_item','refund','inventory_logs','daily_time_record','shift_setting','overtime_permit','management_pin'] %}<option {{ 'selected' if filters.entity == name }}>{{ name }}</option>{% endfor %}</select>
-  <select name="action" aria-label="Action"><option value="">All actions</option>{% for name in ['INSERT','UPDATE','DELETE','SET_PIN'] %}<option {{ 'selected' if filters.action == name }}>{{ name }}</option>{% endfor %}</select>
-  <button class="btn">Filter</button><a class="btn btn-quiet" href="{{ url_for('audit.index') }}">Reset</a>
+  <select name="entity" aria-label="Record">
+    <option value="">All records</option>
+    {% for key, label in entities.items() %}<option value="{{ key }}" {{ 'selected' if filters.entity == key }}>{{ label|capitalize }}</option>{% endfor %}
+  </select>
+  <select name="action" aria-label="Action">
+    <option value="">All actions</option>
+    {% for key, label in [('INSERT','Created'),('UPDATE','Updated'),('DELETE','Deleted'),('SET_PIN','Set PIN')] %}<option value="{{ key }}" {{ 'selected' if filters.action == key }}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Filter</button>
+  <a class="btn btn-quiet" href="{{ url_for('audit.index') }}">Reset</a>
 </form>
-{% if rows %}<div class="table-wrap"><table class="table"><thead><tr><th>Time (Manila)</th><th>Staff / approval</th><th>Entity</th><th>Action</th><th>Details</th></tr></thead><tbody>
-{% for r in rows %}<tr><td>{{ r.occurred_at|dt }}</td><td>{{ r.actor }}{% if r.approved_by %}<br><span class="muted small">Approved by {{ r.approved_by }}</span>{% endif %}</td><td>{{ r.entity }}</td><td>{{ r.action }}</td><td><details><summary>View change #{{ r.audit_id }}</summary><p>Before</p><pre class="audit-detail">{{ r.before_data|tojson(indent=2) }}</pre><p>After</p><pre class="audit-detail">{{ r.after_data|tojson(indent=2) }}</pre></details></td></tr>{% endfor %}
-</tbody></table></div>{% else %}<p class="empty">No changes match these filters.</p>{% endif %}
+{% if rows %}<div class="table-wrap"><table class="table">
+  <thead><tr><th>Time</th><th>Staff</th><th>Details</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr>
+      <td>{{ r.time|dt }}</td>
+      <td><strong>{{ r.actor }}</strong>{% if r.role %}<div class="muted small">{{ r.role }}</div>{% endif %}{% if r.approved_by %}<div class="muted small">Approved by {{ r.approved_by }}</div>{% endif %}</td>
+      <td>{{ r.details }}{% if r.subject %} <span class="chip">{{ r.subject }}</span>{% endif %}</td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>{% else %}<p class="empty">No changes match these filters.</p>{% endif %}
 <div class="form-actions">{% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page-1, **filters) }}">Previous</a>{% endif %}<span>Page {{ page }}</span>{% if more %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page+1, **filters) }}">Next</a>{% endif %}</div>
 {% endblock %}

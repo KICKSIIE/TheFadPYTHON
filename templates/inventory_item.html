@@ -6,7 +6,6 @@
   <a class="btn btn-quiet" href="{{ url_for('inventory.index') }}">Back</a>
 </div>
 <p><strong>{{ product.current_stock }}</strong> in stock</p>
-<div class="stitch"></div>
 <div class="forms-row">
   {% for action, title, button in [('in', 'Stock in', 'Add'), ('out', 'Stock out', 'Remove'), ('adjust', 'Stock count', 'Set')] %}
   <form class="form" method="post" action="{{ url_for('inventory.move', product_id=product.product_id) }}">

@@ -3,6 +3,7 @@
 {% from "_macros.html" import thumb, swatch, stock_line %}
 {% block title %}{{ item.product_name }}{% endblock %}
 {% block content %}
+<div class="page-back"><a class="btn btn-quiet btn-sm" href="{{ url_for('catalog.index', category=item.category_id) if category else url_for('catalog.index') }}">&larr; Back to shop</a></div>
 <p class="crumbs"><a href="{{ url_for('catalog.index') }}">Shop</a>
   {% if category %} / <a href="{{ url_for('catalog.index', category=item.category_id) }}">{{ category }}</a>{% endif %} / {{ item.product_name }}</p>
 <div class="detail">

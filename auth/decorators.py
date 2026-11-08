@@ -26,6 +26,9 @@ def login_required(view):
             return redirect(url_for("auth.login"))
         if access.get("user_type"):
             session["user_type"] = access["user_type"]
+        if current_app.config.get("NAV_UNLOCKED"):
+            # Prototype navigation copy only: browse every page without an active shift.
+            access["allowed"] = True
         g.staff_access = access
         exempt = request.endpoint in {"attendance.index", "attendance.clock_in", "attendance.clock_out",
                                      "attendance.overtime_in", "attendance.overtime_out", "auth.account"}

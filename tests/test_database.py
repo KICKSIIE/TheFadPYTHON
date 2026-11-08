@@ -91,14 +91,15 @@ def test_duplicate_clock_in_rejected(conn):
     with pytest.raises(psycopg.Error): conn.execute('CALL sp_clock_in(%s,\'09:00\',15,24,NULL)',(uid,))
 
 
-def test_pin_lockout_hash_and_audit_redaction(conn):
+def test_pin_hash_and_audit_redaction(conn):
     uid=staff(conn)
     conn.execute('CALL sp_set_management_pin(%s,%s,%s)',(uid,'TestPassword123','654321'))
     pin=conn.execute('SELECT pin_hash FROM management_pin WHERE user_id=%s',(uid,)).fetchone()['pin_hash']
     assert pin!='654321' and pin.startswith('$2')
     assert conn.execute("SELECT * FROM fn_verify_management_pin('sql_test','654321')").fetchone()['verified']
-    for _ in range(5): assert not conn.execute("SELECT * FROM fn_verify_management_pin('sql_test','000000')").fetchone()['verified']
-    assert not conn.execute("SELECT * FROM fn_verify_management_pin('sql_test','654321')").fetchone()['verified']
+    for _ in range(6): assert not conn.execute("SELECT * FROM fn_verify_management_pin('sql_test','000000')").fetchone()['verified']
+    # Wrong guesses are rejected without locking the PIN.
+    assert conn.execute("SELECT * FROM fn_verify_management_pin('sql_test','654321')").fetchone()['verified']
     rows=conn.execute("SELECT before_data,after_data FROM change_audit WHERE entity='users' AND after_data->>'username'='sql_test'").fetchall()
     assert rows and all('password_hash' not in (r['after_data'] or {}) for r in rows)
 

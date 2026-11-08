@@ -35,6 +35,10 @@ def index():
     try:
         db.call_procedure("sp_expire_promos", None)
         rows = db.call_function("fn_list_discounts")
+        for row in rows:
+            styles = db.call_function("fn_discount_product_names", row["discount_id"])
+            row["product_names"] = [s["product_name"] for s in styles]
+            row["variant_count"] = sum(s["variants"] for s in styles)
     except db.DbError as exc:
         flash(str(exc), "error")
         rows = []

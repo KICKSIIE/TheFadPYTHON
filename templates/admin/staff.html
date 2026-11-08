@@ -20,11 +20,13 @@
       <td class="actions">
         <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_staff.edit', user_id=s.user_id) }}">Edit</a>
         {% if s.user_id != session.user_id %}
-        <form method="post" class="inline" action="{{ url_for('admin_staff.set_active', user_id=s.user_id) }}">
-          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-          <input type="hidden" name="active" value="{{ '0' if s.is_active else '1' }}">
-          <button class="btn btn-sm {{ 'btn-danger' if s.is_active else 'btn-quiet' }}" type="submit">{{ 'Deactivate' if s.is_active else 'Reactivate' }}</button>
-        </form>
+        <button class="btn btn-sm {{ 'btn-danger' if s.is_active else 'btn-quiet' }}" type="button"
+                data-confirm data-action="{{ url_for('admin_staff.set_active', user_id=s.user_id) }}"
+                data-title="{{ 'Deactivate account' if s.is_active else 'Reactivate account' }}"
+                data-confirm-label="{{ 'Deactivate' if s.is_active else 'Reactivate' }}"
+                data-danger="{{ '1' if s.is_active else '0' }}"
+                data-fields='{{ {"active": "0" if s.is_active else "1"}|tojson }}'
+                data-message="{{ ('Deactivate ' ~ s.first_name ~ ' ' ~ s.last_name ~ '? They cannot sign in until reactivated.') if s.is_active else ('Reactivate ' ~ s.first_name ~ ' ' ~ s.last_name ~ '?') }}">{{ 'Deactivate' if s.is_active else 'Reactivate' }}</button>
         {% endif %}
       </td>
     </tr>

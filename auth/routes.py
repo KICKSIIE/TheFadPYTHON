@@ -31,6 +31,11 @@ def staff():
 def login():
     nxt = request.args.get("next") or request.form.get("next") or ""
 
+    # Already signed in: go straight into the app instead of showing a second sign-in screen.
+    # To use a different account, sign out first (Sign out in the sidebar).
+    if request.method == "GET" and "user_id" in session:
+        return redirect(url_for("attendance.index"))
+
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
@@ -80,10 +85,11 @@ def logout():
 @bp.route("/account", methods=["GET", "POST"])
 @login_required
 def account():
+    # Account & security is an admin page: cashiers have no PIN to manage, so it is not shown or served to them.
+    if session["user_type"] != "AD":
+        from flask import abort
+        abort(403)
     if request.method == "POST":
-        if session["user_type"] != "AD":
-            from flask import abort
-            abort(403)
         try:
             pin = request.form.get("new_pin", "")
             if pin != request.form.get("confirm_pin", ""):

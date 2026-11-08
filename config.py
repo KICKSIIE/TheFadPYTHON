@@ -21,6 +21,10 @@ class Config:
     # Phase 2: set MFA_ENABLED=true in .env once /verify-otp is implemented.
     MFA_ENABLED = os.environ.get("MFA_ENABLED", "false").lower() == "true"
 
+    # Prototype only: prototype/run_prototype.py turns this on so every signed-in page opens without
+    # clocking in. The real app (run.py / flask run) never sets it, so the shift gate stays enforced.
+    NAV_UNLOCKED = os.environ.get("NAV_UNLOCKED", "false").lower() == "true"
+
     PERMANENT_SESSION_LIFETIME = timedelta(hours=8)
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = "Lax"

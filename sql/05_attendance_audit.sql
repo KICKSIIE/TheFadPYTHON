@@ -154,15 +154,12 @@ END;
 $$;
 CREATE OR REPLACE FUNCTION thefad.fn_verify_management_pin(p_username TEXT, p_pin TEXT)
 RETURNS TABLE(verified BOOLEAN) LANGUAGE plpgsql SET search_path = thefad, public, pg_temp AS $$
-DECLARE v_pin management_pin%ROWTYPE; v_user INT; v_ok BOOLEAN;
+DECLARE v_pin management_pin%ROWTYPE; v_user INT;
 BEGIN
     SELECT user_id INTO v_user FROM users WHERE username=p_username AND is_active AND user_type='AD';
-    SELECT * INTO v_pin FROM management_pin WHERE user_id=v_user FOR UPDATE;
-    IF NOT FOUND OR v_pin.locked_until > LOCALTIMESTAMP THEN RETURN QUERY SELECT FALSE; RETURN; END IF;
-    v_ok := COALESCE(v_pin.pin_hash = crypt(p_pin,v_pin.pin_hash),FALSE);
-    UPDATE management_pin SET failed_attempts=CASE WHEN v_ok THEN 0 ELSE (failed_attempts % 5)+1 END,
-      locked_until=CASE WHEN NOT v_ok AND (failed_attempts % 5)+1 >= 5 THEN LOCALTIMESTAMP + INTERVAL '15 minutes' ELSE NULL END WHERE user_id=v_user;
-    RETURN QUERY SELECT v_ok;
+    SELECT * INTO v_pin FROM management_pin WHERE user_id=v_user;
+    IF NOT FOUND THEN RETURN QUERY SELECT FALSE; RETURN; END IF;
+    RETURN QUERY SELECT COALESCE(v_pin.pin_hash = crypt(p_pin,v_pin.pin_hash),FALSE);
 END;
 $$;
 

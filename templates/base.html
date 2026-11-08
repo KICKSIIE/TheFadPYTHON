@@ -33,7 +33,9 @@
     <div class="who">
       <div class="who-name">{{ current_user.name }}</div>
       <div class="who-role">{{ current_user.role }}</div>
+      {% if current_user.role == 'Admin' %}
       <a class="account-link" href="{{ url_for('auth.account') }}">Account &amp; security</a>
+      {% endif %}
       <div class="who-actions">
         <a class="btn btn-sm btn-light" href="{{ url_for('catalog.index') }}" target="_blank" rel="noopener">View shop</a>
         <form method="post" action="{{ url_for('auth.logout') }}">
@@ -66,6 +68,9 @@
 </header>
 <main class="content public wrap">
 {% endif %}
+    {% if config.NAV_UNLOCKED %}
+    <div class="proto-note">Prototype copy — navigation is unlocked, so pages open without clocking in. Close it and use <code>python run.py</code> for the real system.</div>
+    {% endif %}
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% for category, message in messages %}
         <div class="flash {{ category }}" role="status">{{ message }}</div>
@@ -102,8 +107,10 @@
   <div class="wrap foot-base">{{ store.name }} &middot; {{ store.tagline }}</div>
 </footer>
 {% endif %}
+{% if staff_layout %}{% include "_approval_modal.html" %}{% endif %}
 <script src="{{ url_for('static', filename='lightbox.js') }}" defer></script>
 <script src="{{ url_for('static', filename='shop.js') }}" defer></script>
 <script src="{{ url_for('static', filename='approval.js') }}" defer></script>
+<script src="{{ url_for('static', filename='modal.js') }}" defer></script>
 </body>
 </html>

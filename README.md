@@ -24,6 +24,7 @@ flask --app app run --debug
 Or simply `python run.py` (it also refuses to start, with a clear message, if the project folder is out of date).
 Open http://127.0.0.1:5000 and check http://127.0.0.1:5000/health (should say `database: ok`).
 Sign in with `dev_admin / Admin@1234` or `dev_cashier / Cashier@1234`.
+To click around without clocking in (prototyping only), run `python prototype\run_prototype.py` and open http://127.0.0.1:5001/staff. It is the same app and database with the shift gate switched off; see `prototype/README.md`.
 
 ## 3. Add your screen
 Each module has its own file in `modules/`. Replace the placeholder:
@@ -53,7 +54,7 @@ Add `{{ csrf_token() }}` as a hidden `_csrf` field in every POST form.
 <!-- /coderabbit-ai-generated:v1 -->
 
 <!-- /coderabbit-ai-generated:v1 -->
-- The regular schedule is Monday–Saturday in Asia/Manila. Clock in once during the scheduled window; late arrivals retain the same closing time. Actual time in is recorded for punctuality and payroll.
+- The regular schedule is Monday–Saturday in Asia/Manila. Clock in once during the scheduled window; late arrivals retain the same closing time. Actual time in is recorded for punctuality and attendance.
 <!-- coderabbit-ai-generated:v1 -->
 
 <!-- coderabbit-ai-generated-section:v1:7fc885763fd1d10af4cb2794e7b232764a8fd5f02b15cb9f6a768b0f6fadd41f -->
@@ -68,10 +69,10 @@ Add `{{ csrf_token() }}` as a hidden `_csrf` field in every POST form.
   ```
   It sweeps every 30 seconds and writes the exact scheduled timestamp. Protected requests also sweep before authorizing access. Restart the worker after a process restart.
 - A forgotten clock-in creates no paid time. Admins correct attendance through Everyone > Add shift / Edit with a reason. Existing historical completed records are retained.
-- Admins set their own 6–12 digit approval PIN in Account & security using their current password. Management changes require approval; cashier stock changes require an admin username and PIN. Five failed PIN checks lock that admin PIN for 15 minutes. PINs are hashed; password verification allows replacement.
-- Payroll is available to admins. Only completed, non-Absent regular and approved overtime records add hours. Both use the stored hourly rate; this is a gross-pay estimate without statutory deductions or an overtime premium. The current staff form does not edit hourly rates yet.
+- Admins set their own 6–12 digit approval PIN in Account & security using their current password. That page and the PIN approval exist for admins only; cashiers do not see it. Management changes require approval; cashier stock changes require an admin username and PIN. Wrong PINs are simply rejected, with no lockout. PINs are hashed; password verification allows replacement. The routines behind it are in `sql/07_security_populate.sql` (a subset of `05`, for databases that already have the attendance part of 05). In this development database the seeded admins `dev_admin` and `ana.reyes` use PIN `123456`.
+- Payroll was removed by team decision: there is no payroll page, no hourly rate in the staff screens and no pay figures anywhere in the app. The optional `fn_payroll` database routine may still exist for coursework but nothing calls it.
 - Apply `sql/setup_all.sql` to an original restored database, or apply 05 and 06 to an already-updated database; also update the revised sale routine in 04. Migration 06 supplies routines previously only expected in the external backup. Their old implementations were unavailable, so confirm compatibility against your original backup before deployment.
-- Audit log is now a searchable admin page backed by database triggers. It records actor, approving admin, entity and before/after data, excluding credentials and binary photos. Audit history rejects UPDATE, DELETE and TRUNCATE. Direct database owners can still change database objects; deploy with restricted database credentials.
+- Audit log is now a searchable admin page backed by database triggers. It records the actor, the approving admin, the record type and what happened, in readable words; the before/after payloads stay in the database and are never shown. Credentials and binary photos are excluded. Audit history rejects UPDATE, DELETE and TRUNCATE. Direct database owners can still change database objects; deploy with restricted database credentials.
 
 
 
@@ -80,7 +81,7 @@ Add `{{ csrf_token() }}` as a hidden `_csrf` field in every POST form.
 <!-- coderabbit-ai-generated-section:v1:80eb091fe70ad3fd5dfc9bd6fbacaf6b53010787fb2bfcd127010f5aec060723 -->
 
 ## Shop and location
-The header search is centered with keyboard-accessible product suggestions. Categories sit on the left on desktop and wrap above products on mobile. Search retains the current filters.
+The header search is centered with keyboard-accessible product suggestions. Categories sit centered above the products so the grid can use the full page width. Search retains the current filters.
 The footer uses the supplied [shop location](https://maps.app.goo.gl/fEHAhXsQ6s6VsaWe8), pinned at 10.3100695, 123.9493883, with coordinate-based directions. Store configuration is in `config.py`.
 
 
@@ -107,7 +108,7 @@ number of arguments. `pytest` runs the app tests.
 <!-- coderabbit-ai-generated-section:v1:8fb1747bccfeeaf89eb65112a8d9480ad47b0256c4a716673010fb500d979287 -->
 
 ## Remaining scope
-OTP login, database roles and RLS are still unfinished. The CRUD coverage report supplied with this task lists missing staff profile/password features, inventory ledger corrections/deletions, attendance deletion and standalone sale-item reports. Audit and payroll now have working pages.
+OTP login, database roles and RLS are still unfinished. The CRUD coverage report supplied with this task lists missing staff profile/password features, inventory ledger corrections/deletions, attendance deletion and standalone sale-item reports. Audit has a working admin page; payroll was removed.
 
 
 
@@ -122,7 +123,7 @@ promos, admin_promos, refunds, audit: Po | pos, orders: Pono | inventory: Rivera
 
 <!-- coderabbit-ai-generated-section:v1:8d07fa3d0814bc922042ba5f25ef7967c971e6e1d6651b369f25f8531d26f09d -->
 
-- `modules/audit.py`: database audit viewer with redacted before/after details.
+- `modules/audit.py`: readable audit viewer (no before/after payloads on screen).
 
 <!-- /coderabbit-ai-generated:v1 -->
 
