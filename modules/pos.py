@@ -48,6 +48,10 @@ def index():
                            categories=categories, q=q, category=category)
 
 
+def _return_to_catalog():
+    return redirect(url_for("pos.index", q=request.form.get("q", ""), category=request.form.get("category", "")))
+
+
 @bp.route("/cart/add", methods=["POST"])
 @login_required
 def add():
@@ -57,10 +61,10 @@ def add():
         product = _catalog().get(pid)
     except (ValueError, db.DbError) as exc:
         flash(str(exc), "error")
-        return redirect(url_for("pos.index"))
+        return _return_to_catalog()
     if product is None or product["current_stock"] <= 0:
         flash("That product is out of stock.", "error")
-        return redirect(url_for("pos.index"))
+        return _return_to_catalog()
     cart = _cart()
     wanted = cart.get(str(pid), 0) + qty
     if wanted > product["current_stock"]:
@@ -68,7 +72,7 @@ def add():
         flash(f"Only {wanted} of {product['display_name']} in stock. Cart set to {wanted}.", "info")
     cart[str(pid)] = wanted
     session["cart"] = cart
-    return redirect(request.referrer or url_for("pos.index"))
+    return _return_to_catalog()
 
 
 @bp.route("/cart/update", methods=["POST"])
@@ -84,13 +88,13 @@ def update():
         product = _catalog().get(pid)
     except (ValueError, db.DbError) as exc:
         flash(str(exc), "error")
-        return redirect(url_for("pos.index"))
+        return _return_to_catalog()
     if qty <= 0 or product is None:
         cart.pop(str(pid), None)
     else:
         cart[str(pid)] = min(qty, product["current_stock"])
     session["cart"] = cart
-    return redirect(url_for("pos.index"))
+    return _return_to_catalog()
 
 
 @bp.route("/cart/clear", methods=["POST"])
@@ -98,7 +102,7 @@ def update():
 def clear():
     session.pop("cart", None)
     flash("Cart cleared.", "info")
-    return redirect(url_for("pos.index"))
+    return _return_to_catalog()
 
 
 @bp.route("/checkout", methods=["POST"])

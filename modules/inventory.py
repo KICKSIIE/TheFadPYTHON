@@ -23,7 +23,17 @@ def index():
     except db.DbError as exc:
         flash(str(exc), "error")
         items = []
-    return render_template("inventory.html", items=items, q=q, low_only=low_only, limit=limit)
+    categories = sorted({i["category_name"] for i in items}, key=str.casefold)
+    category = request.args.get("category", "")
+    stock = request.args.get("stock", "")
+    sort = request.args.get("sort", "name_asc")
+    items = [i for i in items if (not category or i["category_name"] == category)
+             and (stock != "in" or i["current_stock"] > 0)
+             and (stock != "out" or i["current_stock"] == 0)]
+    key = (lambda i: (i["current_stock"], i["product_name"].casefold())) if sort.startswith("stock_") else (lambda i: i["product_name"].casefold())
+    items.sort(key=key, reverse=sort.endswith("_desc"))
+    return render_template("inventory.html", items=items, q=q, low_only=low_only, limit=limit,
+                           categories=categories, category=category, stock=stock, sort=sort)
 
 
 @bp.route("/history")

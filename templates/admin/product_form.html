@@ -56,14 +56,14 @@
       <div class="field span-2">
         <label>Photos for this color</label>
         <div class="photo-now">{{ thumb(current.image_id, current.product_name, 'md') }}
-          <a class="btn btn-quiet" href="{{ url_for('admin_products.photos', product_id=product_id) }}">Manage photos</a>
+          <a class="btn btn-quiet" href="{{ url_for('admin_products.photos', product_id=product_id) }}">Add / manage photos</a>
         </div>
       </div>
     {% else %}
       <div class="field span-2">
         <label for="photos">Photos</label>
         <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-        <p class="field-note">First photo is the cover. Shared by every color; change per color later.</p>
+        <p class="field-note">First photo is the cover. Choose more photos again to add to your selection (up to 8). Shared by every color.</p>
       </div>
     {% endif %}
   </div>

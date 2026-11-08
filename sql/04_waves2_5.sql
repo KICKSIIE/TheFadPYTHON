@@ -41,9 +41,11 @@ BEGIN
     IF v_new < 0 THEN
         RAISE EXCEPTION 'Not enough stock for %: % in stock, % needed.', v_name, v_stock, -p_delta;
     END IF;
+    PERFORM set_config('app.stock_receipt', COALESCE(p_sale_id::text, ''), true);
     UPDATE thefad.product SET current_stock = v_new WHERE product_id = p_product_id;
     INSERT INTO thefad.inventory_logs (product_id, sale_id, user_id, transaction_type, quantity_changed, balance_after)
     VALUES (p_product_id, p_sale_id, p_user_id, p_type, p_delta, v_new);
+    PERFORM set_config('app.stock_receipt', '', true);
     RETURN v_new;
 END;
 $$;

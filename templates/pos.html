@@ -17,6 +17,7 @@
     <div class="grid small">
       {% for p in products %}
       <form class="tile {{ 'sold-out' if p.current_stock <= 0 else '' }}" method="post" action="{{ url_for('pos.add') }}">
+        <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="category" value="{{ category or '' }}">
         <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <input type="hidden" name="product_id" value="{{ p.product_id }}">
         <span class="tile-top">{{ thumb(p.image_id, p.product_name, 'sm') }}<span class="tile-title">{{ p.product_name }}{% if p.color %} <span class="chip">{{ swatch(p.color, 'sm') }}{{ p.color }}</span>{% endif %}{% if p.size %} <span class="chip">{{ p.size }}</span>{% endif %}</span></span>
@@ -41,7 +42,8 @@
           <td>{{ l.product.display_name }}<div class="muted small">{{ l.product.current_price|peso }} each</div>{% if l.short %}<div class="warn-text small">Only {{ l.product.current_stock }} in stock</div>{% endif %}</td>
           <td>
             <form method="post" action="{{ url_for('pos.update') }}" class="stepper">
-              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="category" value="{{ category or '' }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
               <input type="hidden" name="product_id" value="{{ l.product.product_id }}">
               <button class="btn btn-sm btn-quiet" type="submit" name="delta" value="-1" aria-label="Fewer">&minus;</button>
               <span class="stepper-qty" aria-label="Quantity">{{ l.qty }}</span>
@@ -56,6 +58,7 @@
       <p class="cart-total"><span>Total</span><strong>{{ total|peso }}</strong></p>
 
       <form method="post" action="{{ url_for('pos.checkout') }}" class="form flat">
+        <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="category" value="{{ category or '' }}">
         <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <label for="fulfillment_type">Order type</label>
         <select id="fulfillment_type" name="fulfillment_type"><option>Walk-in</option><option>Delivery</option></select>
@@ -73,6 +76,7 @@
         </div>
       </form>
       <form method="post" action="{{ url_for('pos.clear') }}" class="cart-clear">
+        <input type="hidden" name="q" value="{{ q }}"><input type="hidden" name="category" value="{{ category or '' }}">
         <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <button class="btn btn-quiet block" type="submit">Clear cart</button>
       </form>
