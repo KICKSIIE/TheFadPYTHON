@@ -2,7 +2,13 @@
 
 # UI and audit update
 
-Based on main commit 2075275. Staff controls now share spacing, custom button styles, table scrolling and pagination. Standalone forms are centered; product/promo editors use a form plus live preview. Promo list → View promo → Edit promo keeps inspection separate from changes. Receipt details use the right side for order status, totals and actions. POS sorts available stock before sold-out variants.
+Based on main commit 2075275. Staff controls now share spacing, custom button styles, table scrolling and pagination. <!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:d76cf1aaed0627ad401a0c18846957593f28ffa3f572680970c0d0bca24b2343 -->
+
+Standalone forms are centered; product editors have a live preview, while promo editors have a product coverage panel.
+
+<!-- /coderabbit-ai-generated:v1 --> Promo list → View promo → Edit promo keeps inspection separate from changes. Receipt details use the right side for order status, totals and actions. POS sorts available stock before sold-out variants.
 
 ## Existing database update
 

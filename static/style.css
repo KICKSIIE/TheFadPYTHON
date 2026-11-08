@@ -609,3 +609,20 @@ input.narrow:not([type=checkbox]):not([type=radio]) { width: 110px; }
 .upload-previews { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: .75rem; }
 .upload-previews > div { display: grid; gap: .35rem; width: 95px; font-size: .75rem; }
 .upload-previews img { width: 95px; height: 95px; border-radius: 8px; object-fit: cover; }
+
+/* Compact photo controls and the shared management approval dialog. */
+.photo-actions { gap: .5rem; flex-wrap: wrap; align-items: center; }
+.photo-item figcaption { display: flex; flex-direction: column; gap: .65rem; padding: .8rem; }
+.photo-item figcaption > .badge { align-self: flex-start; }
+.photo-actions form { min-width: 0; }
+#form-approval .modal-field + .modal-field { margin-top: 1rem; }
+#form-approval .modal-field input { max-width: none; }
+@media (max-width: 480px) {
+  .photo-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
+  .photo-item figcaption { padding: .65rem; }
+}
+.promo-products-panel { position: sticky; top: 1.5rem; }
+.promo-products-panel .field { margin: 1rem 0; }
+.promo-products-panel .field label { margin: 0 0 .35rem; }
+.promo-products-panel .btn { margin-top: .5rem; }
+@media (max-width: 800px) { .promo-products-panel { position: static; } }

@@ -25,47 +25,49 @@
       <label for="end_date">Ends</label>
       <input id="end_date" name="end_date" type="date" value="{{ promo.end_date.isoformat() if promo.end_date and promo.end_date.isoformat else (promo.end_date or '') }}" required>
     </div>
-    {% if not editing %}
-    <div class="field">
-      <label for="scope">Apply to</label>
-      <select id="scope" name="scope">
-        <option value="NONE" {{ 'selected' if promo.scope == 'NONE' }}>No products yet</option>
-        <option value="PRODUCT" {{ 'selected' if promo.scope == 'PRODUCT' }}>One product</option>
-        <option value="STORE" {{ 'selected' if promo.scope == 'STORE' }}>Whole store</option>
-      </select>
-    </div>
-    <div class="field" id="product-field">
-      <label for="product_id">Product</label>
-      <select id="product_id" name="product_id">
-        {% for p in products %}<option value="{{ p.product_id }}">{{ p.name }}</option>{% endfor %}
-      </select>
-    </div>
-    {% endif %}
   </div>
   <div class="form-actions">
     <button class="btn" type="submit">{{ 'Save changes' if editing else 'Create promo' }}</button>
     <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Cancel</a>
   </div>
 </form>
-<aside class="preview-panel promo-preview" aria-label="Live promo preview">
-  <span class="eyebrow">Campaign preview</span><h2 id="promo-preview-name">Your next promotion</h2>
-  <p class="promo-rate"><span id="promo-preview-rate">0%</span> <small>off</small></p>
-  <div class="promo-meta"><p id="promo-preview-dates">Choose your dates</p><p id="promo-preview-scope">{{ (linked|length ~ ' linked products') if editing else 'No products yet' }}</p></div>
-  <p class="field-note">Prices update for linked products when the campaign is active.</p>
+<aside class="panel promo-products-panel" aria-labelledby="promo-products-title">
+  <span class="eyebrow">Product coverage</span>
+  <h2 id="promo-products-title">Add this promo to products</h2>
+  {% if not editing %}
+  <p class="muted small">Choose where this promo applies when you create it.</p>
+  <div class="field">
+    <label for="scope">Apply to</label>
+    <select id="scope" name="scope" form="promo-editor" data-promo-scope>
+      <option value="NONE" {{ 'selected' if promo.scope == 'NONE' }}>No products yet</option>
+      <option value="PRODUCT" {{ 'selected' if promo.scope == 'PRODUCT' }}>One product</option>
+      <option value="STORE" {{ 'selected' if promo.scope == 'STORE' }}>Whole store</option>
+    </select>
+  </div>
+  <div class="field promo-product-field">
+    <label for="product_id">Product</label>
+    <select id="product_id" name="product_id" form="promo-editor">
+      {% for p in products %}<option value="{{ p.product_id }}" {{ 'selected' if promo.product_id|string == p.product_id|string }}>{{ p.name }}</option>{% endfor %}
+    </select>
+  </div>
+  {% elif promo.status == 'Active' %}
+  <p class="muted small">Apply this active promo to a product or the whole store. Save changes to the promo details first.</p>
+  <form method="post" action="{{ url_for('admin_promos.apply', discount_id=discount_id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <div class="field"><label for="apply-scope">Apply to</label>
+      <select id="apply-scope" name="scope" data-promo-scope>
+        <option value="PRODUCT">One product</option><option value="STORE">Whole store</option>
+      </select>
+    </div>
+    <div class="field promo-product-field"><label for="apply-product">Product</label>
+      <select id="apply-product" name="product_id">{% for p in products %}<option value="{{ p.product_id }}">{{ p.name }}</option>{% endfor %}</select>
+    </div>
+    <button class="btn" type="submit">Apply promo</button>
+  </form>
+  {% else %}
+  <p class="muted small">Products can be added when this promo is active.</p>
+  {% endif %}
 </aside></div>
-
-{% if not editing %}
-<script>
-  (function () {
-    const scope = document.getElementById('scope');
-    const product = document.getElementById('product-field');
-    if (!scope || !product) return;
-    function sync() { product.style.display = scope.value === 'PRODUCT' ? '' : 'none'; }
-    scope.addEventListener('change', sync);
-    sync();
-  })();
-</script>
-{% endif %}
 
 {% if editing %}
 <h2>Products on this promo</h2>
@@ -84,19 +86,5 @@
 </table></div>
 {% else %}<p class="empty">No products are on this promo.</p>{% endif %}
 
-{% if promo.status == 'Active' %}
-<h2>Add this promo to products</h2>
-<form class="toolbar" method="post" action="{{ url_for('admin_promos.apply', discount_id=discount_id) }}">
-  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-  <select name="scope" aria-label="Scope">
-    <option value="PRODUCT">One product</option>
-    <option value="STORE">Whole store</option>
-  </select>
-  <select name="product_id" aria-label="Product">
-    {% for p in products %}<option value="{{ p.product_id }}">{{ p.name }}</option>{% endfor %}
-  </select>
-  <button class="btn" type="submit">Apply promo</button>
-</form>
-{% endif %}
 {% endif %}
 {% endblock %}

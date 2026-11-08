@@ -113,3 +113,30 @@ def test_cart_add_keeps_search_and_category(client):
     login(client, 'dev_cashier')
     response = post(client, '/pos/cart/add', {'product_id':'1','quantity':'1','q':'Denim','category':'1'}, '/pos/')
     assert 'q=Denim' in response.location and 'category=1' in response.location
+
+
+def test_promo_product_controls_are_in_side_panel(client):
+    login(client, 'dev_admin')
+    create = client.get('/admin/promos/new').text
+    assert 'id="promo-products-title">Add this promo to products' in create
+    assert 'name="scope" form="promo-editor"' in create
+    assert 'name="product_id" form="promo-editor"' in create
+    assert 'promo-preview' not in create
+    edit = client.get('/admin/promos/1').text
+    assert 'id="promo-products-title">Add this promo to products' in edit
+    assert 'action="/admin/promos/1/apply"' in edit
+    assert edit.index('action="/admin/promos/1/apply"') < edit.index('Products on this promo')
+    assert 'promo-preview' not in edit
+
+
+def test_upcoming_promo_does_not_offer_apply(client, monkeypatch):
+    login(client, 'dev_admin')
+    def routine(name, *args, **kw):
+        result = fake_function(name, *args, **kw)
+        if name == 'fn_get_discount' and result:
+            return dict(result, status='Upcoming')
+        return result
+    monkeypatch.setattr(db, 'call_function', routine)
+    page = client.get('/admin/promos/1').text
+    assert 'Products can be added when this promo is active.' in page
+    assert 'action="/admin/promos/1/apply"' not in page
