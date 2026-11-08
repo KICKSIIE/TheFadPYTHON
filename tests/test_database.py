@@ -141,3 +141,36 @@ def test_sale_totals_and_cancellation_restore_stock(conn):
     assert conn.execute('SELECT current_stock FROM product WHERE product_id=%s',(product['product_id'],)).fetchone()['current_stock']==product['current_stock']-2
     conn.execute("CALL sp_update_order_status(%s,%s,'Cancelled',NULL,NULL)",(uid,sale))
     assert conn.execute('SELECT current_stock FROM product WHERE product_id=%s',(product['product_id'],)).fetchone()['current_stock']==product['current_stock']
+
+
+def test_audit_details_capture_identity_changes_and_security_without_secrets(conn):
+    uid = staff(conn)
+    conn.execute("SELECT set_config('app.current_user','sql_test',true)")
+    conn.execute("UPDATE users SET first_name='Updated' WHERE user_id=%s", (uid,))
+    row = conn.execute("SELECT * FROM change_audit WHERE actor='sql_test' AND entity='users' ORDER BY audit_id DESC LIMIT 1").fetchone()
+    assert row['actor_name'] == 'Updated Staff' and row['actor_role'] == 'AD'
+    assert row['before_data']['first_name'] == 'Test' and row['after_data']['first_name'] == 'Updated'
+    assert 'password_hash' not in row['before_data'] and 'master_pin_code' not in row['after_data']
+    # A password-only change records the action without retaining either hash.
+    conn.execute("UPDATE users SET password_hash=crypt('Replacement123',gen_salt('bf')) WHERE user_id=%s", (uid,))
+    updated = conn.execute("SELECT * FROM change_audit WHERE actor='sql_test' ORDER BY audit_id DESC LIMIT 1").fetchone()
+    assert updated['audit_id'] > row['audit_id']
+    assert updated['before_data'] == updated['after_data']
+    # Event identity remains the recorded identity after the account changes.
+    conn.execute("UPDATE users SET first_name='Renamed' WHERE user_id=%s", (uid,))
+    original = conn.execute('SELECT actor_name FROM change_audit WHERE audit_id=%s', (row['audit_id'],)).fetchone()
+    assert original['actor_name'] == 'Updated Staff'
+    snapshot = conn.execute("SELECT fn_audit_snapshot(%s::jsonb) AS data", ('{"password":"private", "pin_hash":"private", "access_token":"private", "image_data":"private", "product_name":"Tee"}',)).fetchone()['data']
+    assert snapshot == {'product_name': 'Tee'}
+
+
+def test_audit_rolls_back_with_failed_business_transaction(conn):
+    uid = staff(conn)
+    conn.execute("SELECT set_config('app.current_user','sql_test',true)")
+    before = conn.execute("SELECT count(*) AS n FROM change_audit WHERE actor='sql_test'").fetchone()['n']
+    with pytest.raises(psycopg.Error):
+        with conn.transaction():
+            conn.execute("UPDATE users SET first_name='Not saved' WHERE user_id=%s", (uid,))
+            conn.execute("SELECT 1/0")
+    assert conn.execute("SELECT count(*) AS n FROM change_audit WHERE actor='sql_test'").fetchone()['n'] == before
+    assert conn.execute('SELECT first_name FROM users WHERE user_id=%s', (uid,)).fetchone()['first_name'] == 'Test'

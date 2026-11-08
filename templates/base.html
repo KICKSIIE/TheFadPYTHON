@@ -34,7 +34,7 @@
       <div class="who-name">{{ current_user.name }}</div>
       <div class="who-role">{{ current_user.role }}</div>
       {% if current_user.role == 'Admin' %}
-      <a class="account-link" href="{{ url_for('auth.account') }}">Account &amp; security</a>
+      <a class="btn btn-sm btn-light account-link" href="{{ url_for('auth.account') }}">Account &amp; security</a>
       {% endif %}
       <div class="who-actions">
         <a class="btn btn-sm btn-light" href="{{ url_for('catalog.index') }}" target="_blank" rel="noopener">View shop</a>
@@ -112,5 +112,6 @@
 <script src="{{ url_for('static', filename='shop.js') }}" defer></script>
 <script src="{{ url_for('static', filename='approval.js') }}" defer></script>
 <script src="{{ url_for('static', filename='modal.js') }}" defer></script>
+{% if staff_layout %}<script src="{{ url_for('static', filename='staff-ui.js') }}" defer></script>{% endif %}
 </body>
 </html>

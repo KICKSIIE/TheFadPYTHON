@@ -9,6 +9,7 @@
     <a class="btn" href="{{ url_for('pos.index') }}">New sale</a>
   </div>
 </div>
+<div class="order-layout">
 <div class="receipt">
   <header class="receipt-head">
     <img class="receipt-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="{{ store.name }}">
@@ -37,7 +38,7 @@
   <div class="receipt-customer"><p class="receipt-label">Customer</p><p>{{ sale.customer_name }}</p></div>
   {% endif %}
   <div class="receipt-rule"></div>
-  <table class="table compact">
+  <div class="receipt-items"><table class="table compact">
     <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Price</th><th class="num">Total</th></tr></thead>
     <tbody>{% for i in items %}
       <tr><td>{{ i.product_name }}{% if i.discount_name %}<div class="muted small">{{ i.discount_name }}</div>{% endif %}{% if i.quantity_refunded %}<div class="warn-text small">{{ i.quantity_refunded }} refunded</div>{% endif %}</td>
@@ -50,7 +51,7 @@
       {% if sale.discount_amount %}<tr><td colspan="3">Promo savings</td><td class="num">-{{ sale.discount_amount|peso }}</td></tr>{% endif %}
       <tr><td colspan="3"><strong>Total</strong></td><td class="num"><strong>{{ sale.total_amount|peso }}</strong></td></tr>
     </tfoot>
-  </table>
+  </table></div>
   <div class="receipt-rule"></div>
   <footer class="receipt-foot">
     <p class="receipt-thanks">Thank you for shopping with {{ store.name }}.</p>
@@ -59,15 +60,17 @@
   </footer>
 </div>
 
-<div class="no-print">
+<aside class="order-sidebar no-print">
+<section class="panel order-summary"><span class="eyebrow">Order overview</span><h2>{{ sale.order_status|label }}</h2><dl class="summary-list"><div><dt>Total</dt><dd>{{ sale.total_amount|peso }}</dd></div><div><dt>Payment</dt><dd>{{ sale.payment_method }}</dd></div><div><dt>Fulfillment</dt><dd>{{ sale.fulfillment_type }}</dd></div><div><dt>Cashier</dt><dd>{{ sale.cashier }}</dd></div></dl></section>
+<section class="panel"><h2>Order actions</h2>
 {% if sale.order_status in ('Pending', 'Out_for_Delivery') %}
-  <h2>Update order</h2>
+  <p class="muted small">Update delivery details and order status.</p>
   {% if sale.order_status == 'Pending' and sale.fulfillment_type == 'Delivery' %}
-  <form class="toolbar" method="post" action="{{ url_for('orders.set_status', sale_id=sale.sale_id) }}">
+  <form class="order-update" method="post" action="{{ url_for('orders.set_status', sale_id=sale.sale_id) }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <input type="hidden" name="new_status" value="Out_for_Delivery">
-    <input name="rider_service" placeholder="Rider service (e.g. Lalamove)" maxlength="50" required>
-    <input name="rider_contact" placeholder="Rider contact number" maxlength="20" required>
+    <label for="rider-service">Rider service</label><input id="rider-service" name="rider_service" placeholder="Rider service (e.g. Lalamove)" maxlength="50" required>
+    <label for="rider-contact">Rider contact</label><input id="rider-contact" name="rider_contact" placeholder="Rider contact number" maxlength="20" required>
     <button class="btn" type="submit">Send out for delivery</button>
   </form>
   {% endif %}
@@ -85,7 +88,8 @@
   </div>
 {% endif %}
 {% if current_user.role == 'Admin' and sale.order_status in ('Completed', 'Partially_Refunded') %}
-  <p><a href="{{ url_for('refunds.sale', sale_id=sale.sale_id) }}">Refund items from this order</a></p>
+  <p><a class="btn btn-quiet" href="{{ url_for('refunds.sale', sale_id=sale.sale_id) }}">Refund items from this order</a></p>
 {% endif %}
-</div>
+<p class="field-note">The receipt reflects the current order status. Use Print receipt for a clean copy.</p>
+</section></aside></div>
 {% endblock %}

@@ -60,22 +60,34 @@ as the checklist when building screens. Values here match the live stylesheet (`
 
 ## 3. Components
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:f354c662d8e2f5c25ca2b5a6bfac668f8310d21ec6b0083416b43e233a1a4b54 -->
+
 ### Buttons
 
 | Variant | Look | Use |
 |---|---|---|
-| Primary | Black pill, white text | One per screen / form submit |
-| Quiet | Transparent, grey border | Secondary actions, Cancel, Back |
+| Primary | Black, white text, 9 px corners in staff screens | Form submit / primary action |
+| Quiet | White, grey border | Secondary actions, Cancel, Back |
 | Danger (outline) | White, red text, red border | Delete / Deactivate in tables |
 | Danger (solid) | Red fill, white text | Confirm inside the modal |
-| Small | 32 px tall, 0.85 rem | Table actions only |
+| Small | 32 px tall, 0.78 rem | Table actions |
 | Block | Full width, 8 px radius | Cart checkout |
 
-Rules: one primary per view; destructive buttons never appear without the modal; table action gaps are 8 px.
+Buttons and styled links retain their existing actions. Account & security is a dedicated sidebar button.
 
-### Form layout (two columns)
 
-Container `max-width: 760 px`. Fields in a responsive grid, `minmax(230px, 1fr)`, gap `17 / 22 px`.
+
+<!-- /coderabbit-ai-generated:v1 -->### Form layout (two columns)
+
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:48a3849944fe7b8f795cbdc9b2cc1208fb771a81e48a350032ee3d4aae366bf1 -->
+
+Centered standalone forms use `max-width: 760 px`. Product and promo editors use a centered 1240 px grid with a form and live preview. Fields use a responsive grid with gap `17 / 22 px`.
+
+<!-- /coderabbit-ai-generated:v1 -->
 Full-width fields span both columns. Labels sit above the input, 14/600. No helper paragraph unless the
 field is genuinely ambiguous.
 
@@ -162,12 +174,24 @@ Date range toolbar, five stat cards (Present, Late, Absent, Hours, Overtime), th
 Actions column (Edit / Add shift).
 
 ### New sale (POS)
-Two columns: product grid (left, sticky cart right).
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:925569e937b4e35fd0102ef4eb7328d81b0b07e07146e8fa26f1bd5a2d76d4c3 -->
+
+Two columns: product grid (left, sticky cart right). Available items appear first; sold-out variants appear last after search/category filtering.
+
+<!-- /coderabbit-ai-generated:v1 -->
 Cart ends with a stack: full-width primary **Complete sale**, 8 px gap, full-width quiet **Clear cart**.
 
 ### Orders + receipt
 Table of orders; order detail shows the printable receipt:
-centered logo, store name, tagline, address, Plus Code, Facebook; dotted rules; meta grid
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:9eb3af32f1ffecb94bfe532bfed2bbf02c42cb182df98d93d5d45a62d8e6ebc9 -->
+
+receipt on the left and order overview/actions on the right; centered logo, store name, tagline, address, Plus Code, Facebook; dotted rules; meta grid
+
+<!-- /coderabbit-ai-generated:v1 -->
 (Receipt no., Date, Cashier, Order, Payment, Status); item table; totals; thank-you footer with contact.
 
 ### Inventory
@@ -178,8 +202,13 @@ then the action button. Back button in the header.
 | Promo | Discount | Dates | Status | Products | Actions |
 
 - Products: chips as described in §3.
-- Actions: **Active** → `Edit` + `End now`; **Upcoming** → `Edit` + red `Delete`;
-  **Ended** → `View` + red `Delete` (row dimmed).
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:3e71040b1c3dc41a4b1952ecbee090f31ebba550aa364dfdc9e6d1bc0ad68234 -->
+
+- Open **View promo** to inspect the campaign and linked products, then choose **Edit promo**. Active promos also offer End now; unused upcoming/ended promos can be deleted with approval.
+
+<!-- /coderabbit-ai-generated:v1 -->
 - `End now` and `Delete` open the confirmation modal with the PIN.
 - Create/Edit promo: two-column form (Promo name | Discount %, Starts | Ends, Apply to | Product), then
   Save / Cancel. The product picker only appears when "One product" is chosen.
@@ -196,15 +225,25 @@ side by side, Save PIN.
 ### Refunds
 Order lookup toolbar, then the refund report table, then recent refunds. No decorative dividers.
 
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:7e8256edd544ba45587485f53de4bacec3ea5822c9703f018bb63062d40a0624 -->
+
 ### Audit log
 Toolbar: From, To, Staff username, Record, Action, Filter, Reset.
-| Time | Staff | Details |
-- Time: `Nov 08, 2026 10:53 PM`.
-- Staff: username, with role underneath ("Admin" / "Cashier"), plus "Approved by …" when relevant.
-- Details: a short human phrase ("Updated product") plus a chip with the record name ("Essential Tee").
-- No JSON, no before/after payloads, no long explanation paragraph.
+| Time | Staff name | Role | Activity & changes |
+- Show the full staff name, username and approving admin; role has a separate column.
+- Future events preserve staff name and role at the time of the event (migration 08).
+- Each event describes the business action, for example **Receipt created #60** or **Product updated**.
+- Expand **View changes** to compare labelled Before / After values. Updates show only changed fields;
+  creation and deletion show the recorded values and an empty opposite side.
+- Display only reviewed business fields. Never display password/PIN values or hashes, tokens or binary photos.
+- Audit uses server paging (50 events) and preserves filters. Other large tables use 10/25/50/100 rows per page.
+- Scroll wide tables within their card; headers stay visible.
 
-### Shop (public)
+
+
+<!-- /coderabbit-ai-generated:v1 -->### Shop (public)
 - Header: logo · centered search · Shop.
 - Hero centered; **category pills centered above the grid** (never a sidebar).
 - Centered filter row (In stock only, Sort).

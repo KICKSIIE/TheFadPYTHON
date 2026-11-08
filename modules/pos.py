@@ -42,6 +42,7 @@ def index():
 
     shown = [p for p in catalog.values()
              if (not q or q in p["display_name"].lower()) and (category is None or p["category_id"] == category)]
+    shown.sort(key=lambda p: p["current_stock"] <= 0)
     categories = sorted({(p["category_id"], p["category_name"]) for p in catalog.values()}, key=lambda c: c[1])
     return render_template("pos.html", products=shown, lines=lines, total=total,
                            categories=categories, q=q, category=category)
