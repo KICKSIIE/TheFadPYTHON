@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Account & security{% endblock %}
+{% block content %}
+<div class="head"><h1>Account &amp; security</h1><a class="btn btn-quiet" href="{{ url_for('attendance.index') }}">My attendance</a></div>
+{% if current_user.role == 'Admin' %}
+<form class="form" method="post">
+  <h2>Admin approval PIN</h2>
+  <p class="muted">Set or replace your PIN with your current password. Management changes require this PIN. Use 6–12 digits.</p>
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="password">Current password</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+  <label for="new_pin">New PIN</label><input id="new_pin" name="new_pin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" autocomplete="new-password" required>
+  <label for="confirm_pin">Confirm PIN</label><input id="confirm_pin" name="confirm_pin" type="password" inputmode="numeric" pattern="[0-9]{6,12}" autocomplete="new-password" required>
+  <div class="form-actions"><button class="btn">Save approval PIN</button></div>
+</form>
+{% else %}<p>Ask an admin to update your staff account.</p>{% endif %}
+{% endblock %}

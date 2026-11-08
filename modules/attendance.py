@@ -2,11 +2,11 @@
 from datetime import date, datetime, time, timedelta
 
 from flask import (Blueprint, abort, flash, redirect, render_template,
-                   request, session, url_for)
+                   request, session, url_for, g)
 
 import db
 from auth.decorators import login_required, role_required
-from rules import shift_rules
+from rules import shift_rules, shop_now
 
 bp = Blueprint("attendance", __name__, url_prefix="/attendance")
 FMT = "%Y-%m-%dT%H:%M"
@@ -48,23 +48,20 @@ def index():
     except db.DbError as exc:
         flash(str(exc), "error")
         rows, permits = [], []
-    now = datetime.now().replace(microsecond=0)
+    now = g.staff_access["shop_now"]
     open_row = next((x for x in rows if x["shift_type"] == "Regular" and x["time_out"] is None), None)
     st = {}
     if open_row:
         worked = _hours(now - open_row["time_in"])
-        overdue = worked > limit
-        guess = min(now, open_row["time_in"] + timedelta(hours=shift))
-        st = {"worked": worked, "overdue": overdue, "pct": min(100, round(worked / shift * 100)),
-              "can_out": worked >= shift and not overdue,
-              "opens_at": open_row["time_in"] + timedelta(hours=shift),
-              "min": open_row["time_in"].strftime(FMT), "max": now.strftime(FMT), "guess": guess.strftime(FMT)}
+        st = {"worked": worked, "pct": min(100, max(0, round(worked / shift * 100))),
+              "opens_at": open_row.get("scheduled_end") or g.staff_access["shift_end"]}
     today_done = any(x["shift_type"] == "Regular" and x["time_in"].date() == now.date() for x in rows)
     today_permit = next((p for p in permits if p["work_date"] == now.date()), None)
     ot = _overtime_state(today_permit, open_row is not None, now) if today_permit else None
     upcoming = [p for p in permits if p["work_date"] > now.date()]
     return render_template("attendance.html", rows=rows, open_row=open_row, st=st, shift=shift,
-                           today_done=today_done, permit=today_permit, ot=ot, upcoming=upcoming, tab="mine")
+                           today_done=today_done, permit=today_permit, ot=ot, upcoming=upcoming, tab="mine", can_clock_in=g.staff_access["can_clock_in"],
+                           shift_end=g.staff_access["shift_end"])
 
 
 @bp.route("/clock-in", methods=["POST"])
@@ -86,21 +83,6 @@ def clock_out():
     try:
         db.call_procedure("sp_clock_out", session["user_id"], r["shift_hours"], r["max_hours"], None, None)
         flash("Clocked out.", "success")
-    except db.DbError as exc:
-        flash(str(exc), "error")
-    return redirect(url_for("attendance.index"))
-
-
-@bp.route("/missed-clock-out", methods=["POST"])
-@login_required
-def missed_clock_out():
-    r = shift_rules()
-    try:
-        finished = datetime.fromisoformat(request.form.get("time_out", ""))
-        db.call_procedure("sp_clock_out", session["user_id"], r["shift_hours"], r["max_hours"], finished, None)
-        flash("Clock-out saved.", "success")
-    except ValueError:
-        flash("Enter the date and time you finished.", "error")
     except db.DbError as exc:
         flash(str(exc), "error")
     return redirect(url_for("attendance.index"))
@@ -130,7 +112,7 @@ def overtime_out():
 
 # ------------------------------------------------------------------ admin: everyone
 def _range(default_back=6, default_ahead=0):
-    today = date.today()
+    today = shop_now().date()
     try:
         start = date.fromisoformat(request.args.get("start") or (today - timedelta(days=default_back)).isoformat())
         end = date.fromisoformat(request.args.get("end") or (today + timedelta(days=default_ahead)).isoformat())
@@ -160,7 +142,7 @@ def everyone():
     counts = {k: sum(1 for x in regular if x["status"] == k) for k in ("Present", "Late", "Absent")}
     hours = sum((x["total_hours"] or 0) for x in regular)
     overtime = sum((x["overtime_hours"] or 0) for x in rows)
-    today = date.today()
+    today = shop_now().date()
     presets = [("Today", today, today), ("Last 7 days", today - timedelta(days=6), today),
                ("This month", today.replace(day=1), today)]
     return render_template("attendance_everyone.html", rows=rows, staff=staff, start=start, end=end,
@@ -200,7 +182,7 @@ def new_shift():
         except (ValueError, db.DbError) as exc:
             flash(str(exc), "error")
             return _shift_page(request.form, staff, 400)
-    day = request.args.get("date") or date.today().isoformat()
+    day = request.args.get("date") or shop_now().date().isoformat()
     r = shift_rules()
     shift = {"user_id": request.args.get("user_id", type=int), "note": "",
              "time_in": f"{day}T{r['shift_start'].strftime('%H:%M')}",
@@ -271,8 +253,8 @@ def new_overtime():
                   "Choose a staff member and a date, and enter the overtime times.", "error")
             return render_template("overtime_form.html", permit=request.form, staff=staff, editing=False,
                                    default_grace=r["grace"], tab="overtime"), 400
-    permit = {"work_date": date.today().isoformat(), "start_time": r["shift_end"].strftime("%H:%M"),
-              "end_time": (datetime.combine(date.today(), r["shift_end"]) + timedelta(hours=2)).strftime("%H:%M"),
+    permit = {"work_date": shop_now().date().isoformat(), "start_time": r["shift_end"].strftime("%H:%M"),
+              "end_time": (datetime.combine(shop_now().date(), r["shift_end"]) + timedelta(hours=2)).strftime("%H:%M"),
               "grace_minutes": r["grace"], "note": ""}
     return render_template("overtime_form.html", permit=permit, staff=staff, editing=False,
                            default_grace=r["grace"], tab="overtime")

@@ -5,22 +5,23 @@
   <h1>{{ 'Edit overtime' if editing else 'Allow overtime' }}</h1>
   <div><a class="btn btn-quiet" href="{{ url_for('attendance.overtime') }}">Back</a></div>
 </div>
-<form class="form" method="post" action="{{ url_for('attendance.edit_overtime', permit_id=permit.permit_id) if editing else url_for('attendance.new_overtime') }}">
+<p class="muted">Set a fixed overtime window outside regular hours. After overtime starts, only its end can be extended, before it expires, with a reason.</p>
+<form class="form form-wide" method="post" action="{{ url_for('attendance.edit_overtime', permit_id=permit.permit_id) if editing else url_for('attendance.new_overtime') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   {% if editing %}
     <p><strong>{{ permit.full_name }}</strong> &middot; {{ permit.work_date }}</p>
   {% else %}
-    <label for="user_id">Staff</label>
+    <div class="two"><div><label for="user_id">Staff</label>
     <select id="user_id" name="user_id" required>
       <option value="">Choose</option>
       {% for s in staff %}<option value="{{ s.user_id }}" {{ 'selected' if permit.user_id|string == s.user_id|string }}>{{ s.first_name }} {{ s.last_name }}</option>{% endfor %}
     </select>
-    <label for="work_date">Date</label>
-    <input id="work_date" name="work_date" type="date" value="{{ permit.work_date }}" required>
+    </div><div><label for="work_date">Work date</label>
+    <input id="work_date" name="work_date" type="date" value="{{ permit.work_date }}" required></div></div>
   {% endif %}
   <div class="two">
-    <div><label for="start_time">Time in</label><input id="start_time" name="start_time" type="time" value="{{ permit.start_time }}" required></div>
-    <div><label for="end_time">Time out</label><input id="end_time" name="end_time" type="time" value="{{ permit.end_time }}" required></div>
+    <div><label for="start_time">Overtime starts</label><input id="start_time" name="start_time" type="time" value="{{ permit.start_time }}" required></div>
+    <div><label for="end_time">Overtime ends</label><input id="end_time" name="end_time" type="time" value="{{ permit.end_time }}" required></div>
   </div>
   <label for="grace_minutes">Grace for time in (minutes)</label>
   <input id="grace_minutes" name="grace_minutes" type="number" min="0" max="120" value="{{ permit.grace_minutes if permit.grace_minutes is not none else default_grace }}" class="narrow">

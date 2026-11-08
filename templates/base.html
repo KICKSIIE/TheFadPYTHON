@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 {% set staff_layout = current_user and not public_page %}
-<body class="{{ 'staff' if staff_layout else 'public' }}">
+<body data-role="{{ current_user.role if current_user else '' }}" class="{{ 'staff' if staff_layout else 'public' }}">
 {% if staff_layout %}
 <div class="shell">
   <aside class="side">
@@ -33,6 +33,7 @@
     <div class="who">
       <div class="who-name">{{ current_user.name }}</div>
       <div class="who-role">{{ current_user.role }}</div>
+      <a class="account-link" href="{{ url_for('auth.account') }}">Account &amp; security</a>
       <div class="who-actions">
         <a class="btn btn-sm btn-light" href="{{ url_for('catalog.index') }}" target="_blank" rel="noopener">View shop</a>
         <form method="post" action="{{ url_for('auth.logout') }}">
@@ -49,9 +50,14 @@
   <div class="wrap">
     <a class="brand" href="{{ url_for('catalog.index') }}" aria-label="The Fad, shop home"><img class="logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="The Fad"></a>
     <form class="site-search" action="{{ url_for('catalog.index') }}" method="get" role="search">
-      <input type="search" name="q" value="{{ request.args.get('q', '') if request.endpoint == 'catalog.index' else '' }}"
+      <input type="hidden" name="category" value="{{ request.args.get('category', '') }}">
+      <input type="hidden" name="instock" value="{{ request.args.get('instock', '') }}">
+      <input type="hidden" name="sort" value="{{ request.args.get('sort', 'featured') }}">
+      <input id="shop-search" type="search" name="q" autocomplete="off" aria-controls="search-suggestions" aria-expanded="false" value="{{ request.args.get('q', '') if request.endpoint == 'catalog.index' else '' }}"
              placeholder="Search tees, hoodies, colors" aria-label="Search the shop">
       <button type="submit">Search</button>
+      <div id="search-suggestions" class="search-suggestions" hidden aria-label="Product suggestions"></div>
+      <span id="search-status" class="sr-only" role="status" aria-live="polite"></span>
     </form>
     <nav class="site-nav" aria-label="Site">
       <a href="{{ url_for('catalog.index') }}">Shop</a>
@@ -98,5 +104,6 @@
 {% endif %}
 <script src="{{ url_for('static', filename='lightbox.js') }}" defer></script>
 <script src="{{ url_for('static', filename='shop.js') }}" defer></script>
+<script src="{{ url_for('static', filename='approval.js') }}" defer></script>
 </body>
 </html>

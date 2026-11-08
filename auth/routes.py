@@ -2,6 +2,7 @@ from flask import (Blueprint, current_app, flash, redirect, render_template,
                    request, session, url_for)
 
 import db
+from auth.decorators import login_required
 
 bp = Blueprint("auth", __name__)
 
@@ -57,7 +58,7 @@ def login():
             return redirect(url_for("auth.verify_otp"))
 
         _start_session(user)
-        return redirect(nxt if _safe_next(nxt) else url_for("dashboard.index"))
+        return redirect(url_for("attendance.index"))
 
     return render_template("login.html", next=nxt, username="")
 
@@ -76,3 +77,23 @@ def logout():
     session.clear()
     flash("You have been signed out.", "success")
     return redirect(url_for("auth.login"))
+
+
+@bp.route("/account", methods=["GET", "POST"])
+@login_required
+def account():
+    if request.method == "POST":
+        if session["user_type"] != "AD":
+            from flask import abort
+            abort(403)
+        try:
+            pin = request.form.get("new_pin", "")
+            if pin != request.form.get("confirm_pin", ""):
+                raise ValueError("The PINs do not match.")
+            db.call_procedure("sp_set_management_pin", session["user_id"], request.form.get("password", ""), pin)
+            flash("Approval PIN saved.", "success")
+            return redirect(url_for("auth.account"))
+        except (ValueError, db.DbError) as exc:
+            flash(str(exc), "error")
+            return render_template("account.html"), 400
+    return render_template("account.html")

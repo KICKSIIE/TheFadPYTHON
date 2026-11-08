@@ -4,36 +4,22 @@
 <div class="head"><h1>Attendance</h1></div>
 {% include "_attendance_tabs.html" %}
 
-{% if open_row and st.overdue %}
-<section class="status-card warn-card">
-  <div>
-    <strong>You did not clock out</strong>
-    <p class="muted">Clocked in {{ open_row.time_in|dt }}. When did you finish?</p>
-    <form class="toolbar" method="post" action="{{ url_for('attendance.missed_clock_out') }}">
-      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-      <input type="datetime-local" name="time_out" value="{{ st.guess }}" min="{{ st.min }}" max="{{ st.max }}" required aria-label="Finish time">
-      <button class="btn" type="submit">Save clock-out</button>
-    </form>
-  </div>
-</section>
-{% elif open_row %}
+<p class="muted">Shop time (Asia/Manila). Regular shift ends at {{ shift_end.strftime('%I:%M %p') }}. Late clock-ins do not extend it. Forgotten clock-outs close automatically.</p>
+{% if open_row %}
 <section class="status-card">
   <div class="shift-info">
     <strong>On shift since {{ open_row.time_in|dt }}</strong>
     <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ st.pct }}"><span style="width: {{ st.pct }}%"></span></div>
-    <p class="muted">{{ '%.1f'|format(st.worked) }} of {{ shift|int }} hours{% if not st.can_out %} &middot; clock out from {{ st.opens_at.strftime('%I:%M %p') }}{% endif %}</p>
+    <p class="muted">{{ '%.1f'|format(st.worked) }} of {{ shift|int }} hours &middot; automatically closes at {{ st.opens_at.strftime('%I:%M %p') }}</p>
   </div>
-  <form method="post" action="{{ url_for('attendance.clock_out') }}">
-    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-    <button class="btn" type="submit" {{ '' if st.can_out else 'disabled' }}>Clock out</button>
-  </form>
+
 </section>
 {% else %}
 <section class="status-card">
   <div><strong>{{ 'Shift done for today' if today_done else 'Off shift' }}</strong></div>
   <form method="post" action="{{ url_for('attendance.clock_in') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
-    <button class="btn" type="submit" {{ 'disabled' if today_done }}>Clock in</button>
+    <button class="btn" type="submit" {{ 'disabled' if not can_clock_in }}>Clock in</button>
   </form>
 </section>
 {% endif %}
@@ -53,9 +39,7 @@
     </p>
   </div>
   {% if ot.state == 'open' %}
-  <form method="post" action="{{ url_for('attendance.overtime_out') }}">
-    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn" type="submit">End overtime</button>
-  </form>
+  <p class="muted small">Automatically closes at the approved end.</p>
   {% elif ot.state in ('early', 'wait', 'ready') %}
   <form method="post" action="{{ url_for('attendance.overtime_in') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">

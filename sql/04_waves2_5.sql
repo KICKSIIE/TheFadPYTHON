@@ -308,6 +308,11 @@ BEGIN
         RAISE EXCEPTION 'Every item needs a product and a quantity of at least 1.';
     END IF;
 
+    -- Lock all cart products before reading prices and computing totals.
+    PERFORM p.product_id FROM thefad.product p
+      WHERE p.product_id IN (SELECT (e->>'product_id')::INT FROM jsonb_array_elements(p_items) e)
+      ORDER BY p.product_id FOR UPDATE;
+
     SELECT COUNT(*), COALESCE(SUM(p.base_price * i.quantity), 0),
            COALESCE(SUM(thefad.fn_effective_price(i.product_id) * i.quantity), 0)
       INTO v_found, v_subtotal, v_total

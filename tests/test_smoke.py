@@ -77,6 +77,11 @@ STATE = {"shift_open": False, "open_hours": 3, "now": None, "permit": None}
 
 def fake_function(name, *args, one=False):
     FUNC_CALLS.append((name, args))
+    if name == "fn_staff_access":
+        now = STATE["now"] or datetime.now()
+        return dict(active=True, allowed=True, can_clock_in=True, shop_now=now, shift_end=now.replace(hour=17, minute=0, second=0))
+    if name == "fn_verify_management_pin":
+        return dict(verified=args[1] == "123456")
     if name == "fn_login_user":
         return USERS.get(tuple(args))
     if name == "fn_get_product" and args[0] == 999:
@@ -131,7 +136,7 @@ def login(client, user, pw="pw"):
 
 
 def post(client, path, data, token_path="/"):
-    data = dict(data, _csrf=token(client, token_path))
+    data = dict(data, approval_pin="123456", _csrf=token(client, token_path))
     return client.post(path, data=data)
 
 
@@ -157,7 +162,7 @@ def test_cashier_blocked_from_admin(client):
 def test_open_redirect_blocked(client):
     r = client.post("/login", data={"username": "dev_admin", "password": "pw",
                                     "next": "//evil.com", "_csrf": token(client)})
-    assert r.headers["Location"].endswith("/dashboard")
+    assert r.headers["Location"].endswith("/attendance/")
 
 
 # --------------------------------------------------------------------- wave 1
@@ -299,7 +304,7 @@ def test_every_menu_page_opens_for_admin(client):
 
 # ----------------------------------------------------- product details, sizes, photos
 def post_form_with_file(client, path, fields, filename, content, token_path):
-    fields = dict(fields, _csrf=token(client, token_path), photos=(io.BytesIO(content), filename))
+    fields = dict(fields, approval_pin="123456", _csrf=token(client, token_path), photos=(io.BytesIO(content), filename))
     return client.post(path, data=fields, content_type="multipart/form-data")
 
 
@@ -387,7 +392,7 @@ def test_manage_photos_page_and_actions(client):
 
 def test_upload_several_photos(client):
     login(client, "dev_admin")
-    fields = {"apply_all": "1", "_csrf": token(client, "/admin/products/1/photos"),
+    fields = {"apply_all": "1", "approval_pin": "123456", "_csrf": token(client, "/admin/products/1/photos"),
               "photos": [(io.BytesIO(PNG), "a.png"), (io.BytesIO(PNG), "b.png")]}
     r = client.post("/admin/products/1/photos/upload", data=fields, content_type="multipart/form-data")
     assert r.status_code == 302
@@ -397,7 +402,7 @@ def test_upload_several_photos(client):
 
 def test_upload_rejects_non_image_and_empty(client):
     login(client, "dev_admin")
-    fields = {"apply_all": "1", "_csrf": token(client, "/admin/products/1/photos"),
+    fields = {"apply_all": "1", "approval_pin": "123456", "_csrf": token(client, "/admin/products/1/photos"),
               "photos": [(io.BytesIO(b"nope"), "a.png")]}
     client.post("/admin/products/1/photos/upload", data=fields, content_type="multipart/form-data")
     assert not CALLS
@@ -504,7 +509,7 @@ def _attendance_html(client, hours):
 
 def test_clock_out_waits_for_a_full_shift(client):
     html = _attendance_html(client, 3)
-    assert "of 8 hours" in html and "clock out from" in html and "disabled" in html
+    assert "of 8 hours" in html and "automatically closes at" in html and ">Clock out</button>" not in html
 
 
 def test_clock_out_opens_after_8_hours(client):
@@ -515,15 +520,11 @@ def test_clock_out_opens_after_8_hours(client):
     assert name == "sp_clock_out" and args[1] == 8 and args[2] == 24 and args[3] is None
 
 
-def test_missed_clock_out_asks_for_the_finish_time(client):
+def test_missed_clock_out_is_automatic(client):
     html = _attendance_html(client, 30)
-    assert "did not clock out" in html and 'type="datetime-local"' in html and "Save clock-out" in html
-    post(client, "/attendance/missed-clock-out", {"time_out": "2026-11-06T18:00"}, "/attendance/")
-    name, args = CALLS[-1]
-    assert name == "sp_clock_out" and args[3] == datetime(2026, 11, 6, 18, 0)
-    CALLS.clear()
-    post(client, "/attendance/missed-clock-out", {"time_out": "not a time"}, "/attendance/")
-    assert not CALLS
+    assert "Forgotten clock-outs close automatically" in html
+    assert 'type="datetime-local"' not in html
+    assert client.post("/attendance/missed-clock-out", data={"_csrf": token(client, "/attendance/")}).status_code == 404
 
 
 def test_everyone_tab_is_admin_only_and_shows_absences(client):
@@ -591,10 +592,10 @@ def test_navigation_has_no_repeated_shortcuts(client):
     login(client, "dev_admin")
     html = client.get("/dashboard").get_data(as_text=True)
     assert html.count("New sale") == 1 and 'class="topline"' not in html and "Today's orders" not in html
-    assert "View shop" in html and "Sign out" in html and "Payroll" not in html
+    assert "View shop" in html and "Sign out" in html and "Payroll" in html
     import menu
     cashier = [i["label"] for g in menu.groups_for("CA") for i in g["items"]]
-    assert "New sale" in cashier and "Payroll" not in [i["label"] for g in menu.groups_for("AD") for i in g["items"]]
+    assert "New sale" in cashier and "Payroll" not in cashier and "Payroll" in [i["label"] for g in menu.groups_for("AD") for i in g["items"]]
 
 
 def test_layouts_use_the_full_screen_width():
@@ -652,7 +653,7 @@ def test_employee_overtime_card_follows_the_time_in_and_grace(client):
     waiting = _ot_page(client, datetime(2026, 11, 9, 18, 10), _permit(), regular_open=True)
     assert "Clock out of your regular shift first." in waiting and "disabled>Start overtime" in waiting
     on = _ot_page(client, datetime(2026, 11, 9, 19, 0), _permit(dtr_id=9, time_in=datetime(2026, 11, 9, 18, 5)))
-    assert "End overtime" in on and "Start overtime" not in on
+    assert "Automatically closes at the approved end" in on and "Start overtime" not in on
     done = _ot_page(client, datetime(2026, 11, 9, 20, 0),
                     _permit(dtr_id=9, time_in=datetime(2026, 11, 9, 18, 5), time_out=datetime(2026, 11, 9, 19, 30)))
     assert "Overtime done." in done and "Start overtime" not in done
@@ -731,25 +732,20 @@ def test_shop_footer_has_ordering_address_map_and_facebook(client):
         assert "How to order" in html and "contact our official Facebook page" in html
         assert "https://www.facebook.com/profile.php?id=61580609323200" in html and "Message us on Facebook" in html
         assert "G.Y. Dela Serna St, Lapu-Lapu, Cebu" in html and "8W6X+2QC" in html
-        assert "<iframe" in html and "google.com/maps?q=8W6X%2B2QC" in html and "output=embed" in html
-        assert "Open in Google Maps" in html and "Get directions" in html and "destination=8W6X%2B2QC" in html
+        assert "<iframe" in html and "google.com/maps?q=10.3100695%2C123.9493883" in html and "output=embed" in html
+        assert "Open in Google Maps" in html and "Get directions" in html and "destination=10.3100695%2C123.9493883" in html
     assert "Order on Facebook" in client.get("/product/1").get_data(as_text=True)
     login(client, "dev_admin")
     assert "<iframe" not in client.get("/dashboard").get_data(as_text=True)          # staff area has no shop footer
     assert 'class="site-foot"' not in client.get("/login", follow_redirects=True).get_data(as_text=True)
 
 
-def test_shop_filters_are_centered():
-    import os
-    css = open(os.path.join(os.path.dirname(__file__), "..", "static", "style.css")).read()
-    assert ".pills, .filter-row { justify-content: center; }" in css and ".filters { justify-items: center" in css
-    assert ".pills { max-width" in css                                                # wraps in centered rows when there are many
+def test_shop_categories_are_on_the_left(client):
+    html = client.get("/").get_data(as_text=True)
+    assert html.index('class="shop-categories"') < html.index('class="shop-results"')
 
 
-def test_payroll_is_gone(client):
-    import glob, os
+def test_payroll_summary_is_registered(client):
     login(client, "dev_admin")
-    assert client.get("/admin/payroll/").status_code == 404
-    root = os.path.join(os.path.dirname(__file__), "..")
-    for f in glob.glob(os.path.join(root, "templates", "**", "*.html"), recursive=True) + glob.glob(os.path.join(root, "modules", "*.py")):
-        assert "payroll" not in open(f).read().lower() and "hourly_rate" not in open(f).read(), f
+    assert client.get("/admin/payroll/").status_code == 200
+    assert client.get("/admin/payroll/download").status_code == 200

@@ -8,7 +8,7 @@ from flask import (Blueprint, Response, flash, render_template, request)
 
 import db
 from auth.decorators import role_required
-from rules import rules
+from rules import shift_rules, shop_now
 
 bp = Blueprint("payroll", __name__, url_prefix="/admin/payroll")
 
@@ -29,8 +29,8 @@ def _periods(today):
 
 
 def _load():
-    r = rules()
-    today = date.today()
+    r = dict(shift_rules(), ot=1)
+    today = shop_now().date()
     presets = _periods(today)
     try:
         start = date.fromisoformat(request.args.get("start") or presets[0][1].isoformat())
@@ -40,8 +40,8 @@ def _load():
         start, end = presets[0][1], presets[0][2]
     rows, absent, open_shifts = [], {}, 0
     try:
-        rows = db.call_function("fn_payroll", start, end, r["shift_hours"], r["ot"])
-        board = db.call_function("fn_attendance_board", start, end, None, r["shift_hours"], r["work_days"])
+        rows = db.call_function("fn_payroll", start, end)
+        board = db.call_function("fn_attendance_board", start, end, None, r["work_days"])
         for b in board:
             if b["status"] == "Absent":
                 absent[b["user_id"]] = absent.get(b["user_id"], 0) + 1

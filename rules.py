@@ -24,3 +24,9 @@ def shift_rules():
 
 def low_stock_default():
     return current_app.config["LOW_STOCK_DEFAULT"]
+
+
+def shop_now():
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo(current_app.config["STORE_TIMEZONE"])).replace(tzinfo=None)

@@ -13,6 +13,7 @@ class Config:
         "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/THEFAD"
     )
     DB_SCHEMA = "thefad"
+    STORE_TIMEZONE = "Asia/Manila"
 
     # Product photos are stored in the database. Reject bigger uploads before reading them.
     MAX_CONTENT_LENGTH = 26 * 1024 * 1024  # up to 8 photos of 3 MB each
@@ -39,3 +40,7 @@ class Config:
     STORE_FACEBOOK = "https://www.facebook.com/profile.php?id=61580609323200"
     STORE_PLUS_CODE = "8W6X+2QC"
     STORE_ADDRESS = "G.Y. Dela Serna St, Lapu-Lapu, Cebu"
+
+    STORE_MAP_URL = "https://maps.app.goo.gl/fEHAhXsQ6s6VsaWe8"
+    STORE_LATITUDE = "10.3100695"
+    STORE_LONGITUDE = "123.9493883"

@@ -1,4 +1,4 @@
-{% if current_user.role == 'Admin' %}
+{% if current_user.role == 'Admin' and staff_access and staff_access.allowed %}
 <div class="tabs" role="navigation" aria-label="Attendance">
   <a class="tab {{ 'on' if tab == 'mine' else '' }}" href="{{ url_for('attendance.index') }}">My shift</a>
   <a class="tab {{ 'on' if tab == 'everyone' else '' }}" href="{{ url_for('attendance.everyone') }}">Everyone</a>

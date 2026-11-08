@@ -2,7 +2,7 @@
 from itertools import groupby
 
 from flask import (Blueprint, Response, abort, flash, redirect, render_template,
-                   request, url_for)
+                   request, url_for, jsonify)
 
 import db
 from utils import color_hex, group_products, size_key, stock_status
@@ -44,6 +44,21 @@ def index():
         sections = [{"name": n, "cards": list(g)} for n, g in groupby(cards, key=lambda c: c["category"])]
     return render_template("catalog.html", cards=cards, sections=sections, filtered=filtered, q=q,
                            category=category, in_stock=in_stock, sort=sort, sorts=SORTS, categories=categories)
+
+
+
+
+@bp.get("/search-suggestions")
+def suggestions():
+    q = request.args.get("q", "").strip()[:100]
+    if len(q) < 2:
+        return jsonify([])
+    try:
+        cards = group_products(db.call_function("fn_list_products", q, request.args.get("category", type=int), False))
+    except db.DbError:
+        return jsonify(error="Search is temporarily unavailable."), 503
+    return jsonify([{"name": c["name"], "url": url_for("catalog.product", product_id=c["first_id"]),
+                     "price": str(c["price_min"])} for c in cards[:6]])
 
 
 @bp.route("/product/<int:product_id>")

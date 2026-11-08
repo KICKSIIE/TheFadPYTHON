@@ -23,6 +23,7 @@ from psycopg_pool import ConnectionPool
 
 pool = None
 SCHEMA = "thefad"
+SHOP_TIMEZONE = "Asia/Manila"
 _IDENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
@@ -31,8 +32,9 @@ class DbError(Exception):
 
 
 def init_db(app):
-    global pool, SCHEMA
+    global pool, SCHEMA, SHOP_TIMEZONE
     SCHEMA = app.config["DB_SCHEMA"]
+    SHOP_TIMEZONE = app.config["STORE_TIMEZONE"]
     pool = ConnectionPool(
         conninfo=app.config["DATABASE_URL"],
         min_size=1,
@@ -54,10 +56,14 @@ def _check_ident(name):
 
 def _prepare(cur):
     """Runs at the start of every transaction."""
+    cur.execute("SELECT set_config('TimeZone', %s, true)",
+                (SHOP_TIMEZONE,))
     user = session.get("username") if has_request_context() else None
     if user:
         # Lets the audit trigger (phase 3) see the app-level user.
         cur.execute("SELECT set_config('app.current_user', %s, true)", (user,))
+    approver = session.get("approval_actor", "") if has_request_context() else ""
+    cur.execute("SELECT set_config('app.approved_by', %s, true)", (approver,))
     # PHASE 2 TODO: SET LOCAL ROLE fad_admin / fad_cashier based on session user_type
     # PHASE 2 TODO: set_config('app.current_shift', <shift>, true)
 

@@ -23,7 +23,7 @@
           <button class="btn btn-sm btn-danger" type="submit">End now</button>
         </form>
         {% endif %}
-      </td>
+      <form method="post" action="{{ url_for('admin_promos.delete_unused', discount_id=r.discount_id) }}" onsubmit="return confirm('Delete this unused promo? Promos used in sales cannot be deleted.')"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-danger btn-sm">Delete unused</button></form></td>
     </tr>{% endfor %}
   </tbody>
 </table></div>

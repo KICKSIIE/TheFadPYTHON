@@ -8,6 +8,9 @@
   <p class="muted">Search by name, color or size. To order, message our <a href="{{ store.facebook }}" target="_blank" rel="noopener">official Facebook page</a>.</p>
 </section>
 
+<div class="shop-layout">
+<aside class="shop-categories" aria-label="Categories">
+<h2>Categories</h2>
 <form class="filters" method="get" action="{{ url_for('catalog.index') }}">
   <input type="hidden" name="category" value="{{ category or '' }}">
   <div class="pills" role="group" aria-label="Categories">
@@ -17,6 +20,11 @@
        href="{{ url_for('catalog.index', q=q or None, category=c.category_id, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">{{ c.category_name }}</a>
     {% endfor %}
   </div>
+</form>
+</aside>
+<div class="shop-results">
+<form class="filters" method="get" action="{{ url_for('catalog.index') }}">
+  <input type="hidden" name="category" value="{{ category or '' }}">
   <div class="filter-row">
     <input type="hidden" name="q" value="{{ q }}">
     <label class="toggle"><input type="checkbox" name="instock" value="1" {{ 'checked' if in_stock }}><span>In stock only</span></label>
@@ -69,4 +77,6 @@
   <p class="empty">No products are listed yet. Check back soon.</p>
   {% endfor %}
 {% endif %}
+</div>
+</div>
 {% endblock %}
