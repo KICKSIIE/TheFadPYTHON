@@ -144,3 +144,14 @@ def unlink(product_id):
     except db.DbError as exc:
         flash(str(exc), "error")
     return redirect(request.referrer or url_for("admin_promos.index"))
+
+
+@bp.post("/<int:discount_id>/delete")
+@role_required("AD")
+def delete_unused(discount_id):
+    try:
+        db.call_procedure("sp_delete_unused_discount", discount_id)
+        flash("Unused promo deleted.", "success")
+    except db.DbError as exc:
+        flash(str(exc), "error")
+    return redirect(url_for("admin_promos.index"))

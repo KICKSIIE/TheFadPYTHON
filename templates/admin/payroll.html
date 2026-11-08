@@ -38,6 +38,6 @@
   <tfoot><tr><td colspan="5">Total</td><td class="num">{{ '%.2f'|format(totals.regular_hours) }}</td><td class="num">{{ '%.2f'|format(totals.overtime_hours) }}</td>
     <td class="num">{{ totals.regular_pay|peso }}</td><td class="num">{{ totals.overtime_pay|peso }}</td><td class="num">{{ totals.gross_pay|peso }}</td></tr></tfoot>
 </table></div>
-<p class="muted small foot">Gross pay before SSS, PhilHealth, Pag-IBIG and tax. Overtime is hours beyond {{ shift_hours|int }} per shift.</p>
+<p class="muted small foot">Gross pay before SSS, PhilHealth, Pag-IBIG and tax. Only completed, approved overtime is counted. Overtime uses the recorded hourly rate; this is a gross pay estimate.</p>
 {% else %}<p class="empty">No staff or shifts in this period.</p>{% endif %}
 {% endblock %}

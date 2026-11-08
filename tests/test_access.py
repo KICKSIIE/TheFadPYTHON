@@ -1,0 +1,65 @@
+"""Exercise the access and approval boundaries independently of the page fixtures."""
+from datetime import datetime
+
+import db
+from tests.test_smoke import client, login, token, fake_function, CALLS
+
+
+def access_mock(monkeypatch, **state):
+    def call(name, *args, **kwargs):
+        if name == 'fn_staff_access':
+            return dict(active=True, allowed=False, can_clock_in=False,
+                        shop_now=datetime(2026,11,9,8), shift_end=datetime(2026,11,9,17), **state)
+        return fake_function(name, *args, **kwargs)
+    monkeypatch.setattr(db, 'call_function', call)
+
+
+def test_login_always_prompts_attendance(client):
+    response = client.post('/login?next=/admin/products/', data={'username':'dev_admin','password':'pw','_csrf':token(client)})
+    assert response.location.endswith('/attendance/')
+
+
+def test_off_shift_cannot_read_or_mutate_system(client, monkeypatch):
+    login(client, "dev_admin")
+    access_mock(monkeypatch)
+    for path in ['/dashboard','/admin/products/','/attendance/schedule','/admin/audit/','/admin/payroll/']:
+        assert client.get(path).location.endswith('/attendance/')
+    response=client.post('/admin/products/new', data={'product_name':'Hidden','approval_pin':'123456','_csrf':token(client,'/attendance/')})
+    assert response.location.endswith('/attendance/')
+    assert not CALLS
+    assert client.get('/attendance/').status_code == 200
+    assert 'disabled>Clock in' in client.get('/attendance/').text
+
+
+def test_attendance_verification_fails_closed(client, monkeypatch):
+    login(client, "dev_admin")
+    def unavailable(*args, **kwargs): raise db.DbError('offline')
+    monkeypatch.setattr(db,'call_function',unavailable)
+    assert client.get('/dashboard').status_code == 503
+
+
+def test_inactive_session_is_revoked(client, monkeypatch):
+    login(client, "dev_admin")
+    monkeypatch.setattr(db,'call_function',lambda *args, **kwargs: {'active':False})
+    assert client.get('/dashboard').location.endswith('/login')
+    with client.session_transaction() as session: assert 'user_id' not in session
+
+
+def test_missing_or_wrong_approval_never_mutates(client):
+    login(client, "dev_admin")
+    for pin in ['', '000000']:
+        response=client.post('/admin/products/new', data={'product_name':'No','approval_pin':pin,'_csrf':token(client,'/admin/products/new')})
+        assert response.status_code == 403
+    assert not CALLS
+
+
+def test_search_suggestions_are_public_and_bounded(client):
+    assert client.get('/search-suggestions?q=d').json == []
+    rows=client.get('/search-suggestions?q=Denim').json
+    assert len(rows) == 1 and rows[0]['name']=='Denim Jacket'
+    assert rows[0]['url'].startswith('/product/')
+
+
+def test_audit_page_is_available_for_admin_only(client):
+    login(client,'dev_cashier')
+    assert client.get('/admin/audit/').status_code == 403

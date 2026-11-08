@@ -12,6 +12,7 @@ MENU = [
     ("Stock", "Promos", "promos.index", ("CA",), "See which promos are running."),
     ("Stock", "Promos", "admin_promos.index", ("AD",), "Create, edit and end promos."),
     ("Team", "Attendance", "attendance.index", ("CA", "AD"), "Clock in and out; admins manage schedule and overtime."),
+    ("Team", "Payroll", "payroll.index", ("AD",), "Completed hours and gross pay."),
     ("Team", "Staff", "admin_staff.index", ("AD",), "Staff accounts and roles."),
     ("Admin", "Refunds", "refunds.index", ("AD",), "Process refunds and see the refund report."),
     ("Admin", "Audit log", "audit.index", ("AD",), "Who changed what, and when."),
