@@ -35,7 +35,38 @@ def test_attendance_verification_fails_closed(client, monkeypatch):
     login(client, "dev_admin")
     def unavailable(*args, **kwargs): raise db.DbError('offline')
     monkeypatch.setattr(db,'call_function',unavailable)
-    assert client.get('/dashboard').status_code == 503
+    response = client.get('/dashboard')
+    assert response.status_code == 503
+    assert 'Go to sign in' in response.text and 'Sign out' in response.text
+    assert client.get('/login').status_code == 200
+    # Signing out does not depend on the database or weaken the attendance gate.
+    response = client.post('/logout', data={'_csrf': token(client, '/login')})
+    assert response.location.endswith('/login')
+    with client.session_transaction() as session:
+        assert 'user_id' not in session
+
+
+def test_login_is_available_with_existing_session(client):
+    login(client, 'dev_admin')
+    page = client.get('/login')
+    assert page.status_code == 200 and 'Signed in as Dev Admin' in page.text
+    response = client.post('/login', data={'username': 'dev_cashier', 'password': 'pw',
+                                           '_csrf': token(client, '/login')})
+    assert response.location.endswith('/attendance/')
+    with client.session_transaction() as session:
+        assert session['username'] == 'dev_cashier'
+
+
+def test_sign_in_reports_database_outage_without_disclosing_details(client, monkeypatch):
+    def unavailable(*args, **kwargs):
+        raise db.DbError('internal database detail')
+    monkeypatch.setattr(db, 'call_function', unavailable)
+    response = login(client, 'dev_admin')
+    assert response.status_code == 503
+    assert 'Sign-in is temporarily unavailable' in response.text
+    assert 'internal database detail' not in response.text
+    with client.session_transaction() as session:
+        assert 'user_id' not in session
 
 
 def test_inactive_session_is_revoked(client, monkeypatch):

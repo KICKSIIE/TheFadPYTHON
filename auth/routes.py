@@ -24,14 +24,11 @@ def _start_session(user):
 @bp.route("/staff")
 def staff():
     """Short address for staff. The public shop never links here."""
-    return redirect(url_for("dashboard.index" if "user_id" in session else "auth.login"))
+    return redirect(url_for("attendance.index" if "user_id" in session else "auth.login"))
 
 
 @bp.route("/login", methods=["GET", "POST"])
 def login():
-    if "user_id" in session:
-        return redirect(url_for("dashboard.index"))
-
     nxt = request.args.get("next") or request.form.get("next") or ""
 
     if request.method == "POST":
@@ -44,7 +41,8 @@ def login():
         try:
             user = db.call_function("fn_login_user", username, password, one=True)
         except db.DbError as exc:
-            flash(str(exc), "error")
+            current_app.logger.warning("Sign-in database check failed: %s", exc)
+            flash("Sign-in is temporarily unavailable. Check the database connection and setup, then try again.", "error")
             return render_template("login.html", next=nxt, username=username), 503
 
         if user is None:

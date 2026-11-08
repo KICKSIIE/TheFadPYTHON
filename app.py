@@ -134,6 +134,10 @@ def create_app(testing=False):
         return render_template("error.html", code=404, heading="Page not found",
                                message="Check the address or use the menu."), 404
 
+    @app.errorhandler(503)
+    def unavailable(_):
+        return render_template("unavailable.html"), 503
+
     return app
 
 
