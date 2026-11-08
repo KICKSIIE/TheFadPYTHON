@@ -5,6 +5,13 @@
 <section class="login">
   <img class="login-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="The Fad">
   <h1>Sign in</h1>
+  {% if current_user %}
+  <p class="muted">Signed in as {{ current_user.name }}. You can sign in with another account or sign out.</p>
+  <form method="post" action="{{ url_for('auth.logout') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="btn btn-quiet" type="submit">Sign out</button>
+  </form>
+  {% endif %}
   <form method="post" action="{{ url_for('auth.login') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <input type="hidden" name="next" value="{{ next }}">

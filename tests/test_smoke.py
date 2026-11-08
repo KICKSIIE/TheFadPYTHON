@@ -485,7 +485,7 @@ def test_shop_is_fully_public_and_has_no_staff_links(client):
 def test_staff_short_address(client):
     assert client.get("/staff").headers["Location"].endswith("/login")
     login(client, "dev_admin")
-    assert client.get("/staff").headers["Location"].endswith("/dashboard")
+    assert client.get("/staff").headers["Location"].endswith("/attendance/")
 
 
 def test_dashboard_survives_missing_name_and_stale_cookie(client):
@@ -634,7 +634,9 @@ def _permit(**kw):
 def _ot_page(client, when, permit, regular_open=False):
     STATE["permit"] = permit
     STATE["shift_open"], STATE["open_hours"] = regular_open, 3
-    if client.get("/login").status_code != 302:                                    # sign in once
+    with client.session_transaction() as session:
+        signed_in = "user_id" in session
+    if not signed_in:
         login(client, "dev_cashier")
     with frozen(when):
         return client.get("/attendance/").get_data(as_text=True)

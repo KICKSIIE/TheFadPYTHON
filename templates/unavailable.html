@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% set public_page = true %}
+{% block title %}Temporarily unavailable{% endblock %}
+{% block content %}
+<h1>Temporarily unavailable</h1>
+<p class="muted">We could not verify access. Check the database connection and attendance setup, then try again.</p>
+<p><a class="btn" href="{{ request.path }}">Try again</a> <a class="btn btn-quiet" href="{{ url_for('auth.login') }}">Go to sign in</a></p>
+{% if current_user %}
+<form method="post" action="{{ url_for('auth.logout') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <button class="btn btn-quiet" type="submit">Sign out</button>
+</form>
+{% endif %}
+{% endblock %}

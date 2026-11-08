@@ -40,6 +40,7 @@ def init_db(app):
         min_size=1,
         max_size=10,
         timeout=5,
+        check=ConnectionPool.check_connection,
         kwargs={
             "row_factory": dict_row,
             "options": f"-c search_path={SCHEMA},public",

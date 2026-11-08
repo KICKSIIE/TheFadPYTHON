@@ -35,6 +35,28 @@ def staff(conn):
     return conn.execute("INSERT INTO users(username,first_name,last_name,user_type,password_hash,email,hired_on,hourly_rate) VALUES('sql_test','Test','Staff','AD',crypt('TestPassword123',gen_salt('bf')),'sql-test@example.test','2026-01-01',100) RETURNING user_id").fetchone()['user_id']
 
 
+def test_pool_replaces_a_closed_idle_connection(conn, monkeypatch):
+    import db
+    from app import create_app
+
+    app = create_app(testing=True)
+    app.config['DATABASE_URL'] = os.environ['THEFAD_TEST_DATABASE_URL']
+    # Restore the module globals after testing the pool used by the application.
+    monkeypatch.setattr(db, 'pool', db.pool)
+    monkeypatch.setattr(db, 'SCHEMA', db.SCHEMA)
+    monkeypatch.setattr(db, 'SHOP_TIMEZONE', db.SHOP_TIMEZONE)
+    db.init_db(app)
+    try:
+        db.pool.wait(timeout=5)
+        with db.pool.connection() as pooled:
+            backend_pid = pooled.info.backend_pid
+        assert conn.execute('SELECT pg_terminate_backend(%s) AS stopped', (backend_pid,)).fetchone()['stopped']
+        # This must succeed on its first attempt without executing the routine twice.
+        assert isinstance(db.call_function('fn_list_categories'), list)
+    finally:
+        db.pool.close()
+
+
 def test_late_clock_in_closes_at_fixed_end_and_locks_access(conn):
     uid=staff(conn)
     freeze(conn,'2026-11-09 10:00:00')
