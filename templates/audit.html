@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Audit log{% endblock %}
 {% block content %}
-<div class="head"><h1>Audit log</h1></div>
+<div class="head"><div><span class="eyebrow">Activity history</span><h1>Audit log</h1><p class="muted small">Track changes, staff activity and approvals. Open an event to compare its values.</p></div></div>
 <form class="toolbar" method="get">
   <input type="date" name="start" value="{{ filters.start }}" aria-label="From" required>
   <input type="date" name="end" value="{{ filters.end }}" aria-label="To" required>
@@ -17,15 +17,20 @@
   <button class="btn" type="submit">Filter</button>
   <a class="btn btn-quiet" href="{{ url_for('audit.index') }}">Reset</a>
 </form>
-{% if rows %}<div class="table-wrap"><table class="table">
-  <thead><tr><th>Time</th><th>Staff</th><th>Details</th></tr></thead>
+{% if rows %}<div class="table-wrap"><table class="table audit-table" data-pagination="server">
+  <thead><tr><th>Time</th><th>Staff name</th><th>Role</th><th>Activity &amp; changes</th></tr></thead>
   <tbody>{% for r in rows %}
     <tr>
       <td>{{ r.time|dt }}</td>
-      <td><strong>{{ r.actor }}</strong>{% if r.role %}<div class="muted small">{{ r.role }}</div>{% endif %}{% if r.approved_by %}<div class="muted small">Approved by {{ r.approved_by }}</div>{% endif %}</td>
-      <td>{{ r.details }}{% if r.subject %} <span class="chip">{{ r.subject }}</span>{% endif %}</td>
+      <td><strong>{{ r.name }}</strong><div class="muted small">{{ r.actor }}</div>{% if r.approved_by %}<div class="muted small">Approved by {{ r.approved_by }}</div>{% endif %}</td>
+      <td><span class="badge">{{ r.role }}</span></td>
+      <td class="audit-details"><strong>{{ r.details }}</strong>{% if r.subject %} <span class="chip">{{ r.subject }}</span>{% endif %}
+        {% if r.changes %}<details><summary>{{ r.changes|length }} field{{ '' if r.changes|length == 1 else 's' }} · View changes</summary>
+          <div class="audit-changes">{% for change in r.changes %}<div class="audit-change"><strong>{{ change.field }}</strong><span class="change-value"><small>Before</small>{{ change.before }}</span><span class="change-value"><small>After</small>{{ change.after }}</span></div>{% endfor %}</div>
+        </details>{% else %}<p class="muted small">No public field values recorded.</p>{% endif %}
+      </td>
     </tr>{% endfor %}
   </tbody>
 </table></div>{% else %}<p class="empty">No changes match these filters.</p>{% endif %}
-<div class="form-actions">{% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page-1, **filters) }}">Previous</a>{% endif %}<span>Page {{ page }}</span>{% if more %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page+1, **filters) }}">Next</a>{% endif %}</div>
+<nav class="table-pagination" aria-label="Audit pages">{% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page-1, **filters) }}">Previous</a>{% endif %}<span>Page {{ page }} · {{ rows|length }} events</span>{% if more %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page+1, **filters) }}">Next</a>{% endif %}</nav>
 {% endblock %}

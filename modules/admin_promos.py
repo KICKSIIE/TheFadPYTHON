@@ -47,9 +47,12 @@ def index():
 
 def _linked(rows):
     """Group promo rows by product so a 12-variant jacket shows as one line."""
+    catalog = {p["product_id"]: p for p in db.call_function("fn_list_products", None, None, True)} if rows else {}
     grouped = {}
     for r in rows:
-        g = grouped.setdefault(r["product_name"], {"name": r["product_name"], "product_id": r["product_id"],
+        product = catalog.get(r["product_id"], r)
+        key = (product["product_name"], product.get("category_id"))
+        g = grouped.setdefault(key, {"name": product["product_name"], "product_id": r["product_id"],
                                                    "variants": 0, "base": r["base_price"], "promo": r["current_price"]})
         g["variants"] += 1
     return list(grouped.values())
@@ -113,6 +116,20 @@ def edit(discount_id):
         abort(404)
     return render_template("admin/promo_form.html", promo=promo, linked=linked, products=products,
                            editing=True, discount_id=discount_id, today=date.today())
+
+
+@bp.route("/<int:discount_id>/view")
+@role_required("AD")
+def view(discount_id):
+    try:
+        promo = db.call_function("fn_get_discount", discount_id, one=True)
+        if promo is None:
+            abort(404)
+        linked = _linked(db.call_function("fn_discount_products", discount_id))
+    except db.DbError as exc:
+        flash(str(exc), "error")
+        return redirect(url_for("admin_promos.index"))
+    return render_template("admin/promo_detail.html", promo=promo, linked=linked)
 
 
 @bp.route("/<int:discount_id>/end", methods=["POST"])

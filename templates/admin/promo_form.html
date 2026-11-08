@@ -5,7 +5,8 @@
   <h1>{{ 'Edit promo' if editing else 'Create promo' }}</h1>
   <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Back</a>
 </div>
-<form class="form wide" method="post" action="{{ url_for('admin_promos.edit', discount_id=discount_id) if editing else url_for('admin_promos.new') }}">
+<div class="editor-layout">
+<form id="promo-editor" class="form wide" method="post" action="{{ url_for('admin_promos.edit', discount_id=discount_id) if editing else url_for('admin_promos.new') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <div class="field-grid">
     <div class="field">
@@ -46,6 +47,12 @@
     <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Cancel</a>
   </div>
 </form>
+<aside class="preview-panel promo-preview" aria-label="Live promo preview">
+  <span class="eyebrow">Campaign preview</span><h2 id="promo-preview-name">Your next promotion</h2>
+  <p class="promo-rate"><span id="promo-preview-rate">0%</span> <small>off</small></p>
+  <div class="promo-meta"><p id="promo-preview-dates">Choose your dates</p><p id="promo-preview-scope">{{ (linked|length ~ ' linked products') if editing else 'No products yet' }}</p></div>
+  <p class="field-note">Prices update for linked products when the campaign is active.</p>
+</aside></div>
 
 {% if not editing %}
 <script>

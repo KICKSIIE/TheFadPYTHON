@@ -9,7 +9,8 @@
 {% if not categories %}
   <p class="empty">There are no categories yet. <a href="{{ url_for('admin_products.categories') }}">Add a category</a> before adding a product.</p>
 {% else %}
-<form class="form wide" method="post" enctype="multipart/form-data"
+<div class="editor-layout product-editor">
+<form id="product-editor" class="form wide" method="post" enctype="multipart/form-data"
       action="{{ url_for('admin_products.edit', product_id=product_id) if editing else url_for('admin_products.new') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <div class="field-grid">
@@ -76,6 +77,18 @@
     <a class="btn btn-quiet" href="{{ url_for('admin_products.index') }}">Cancel</a>
   </div>
 </form>
+<aside class="preview-panel" aria-label="Live product preview">
+  <div class="panel-heading"><h2>Live preview</h2><span class="badge">Catalog card</span></div>
+  <div class="preview-cover" id="preview-cover">{% if editing %}{{ thumb(current.image_id, current.product_name, 'detail') }}{% else %}<span>Choose a photo to preview your product</span>{% endif %}</div>
+  <div class="preview-content"><span class="eyebrow" id="preview-category">Category</span>
+    <h2 id="preview-name">Product name</h2><p class="preview-price" id="preview-price">₱0.00</p>
+    <p class="muted" id="preview-description">Your product description will appear here.</p>
+    <div><h3 class="eyebrow">Colors</h3><div class="preview-chips" id="preview-colors"></div></div>
+    <div><h3 class="eyebrow">Sizes</h3><div class="preview-chips" id="preview-sizes"></div></div>
+    <p class="field-note">Preview updates as you type. Save to publish your changes.</p>
+  </div>
+</aside>
+</div>
 
 {% if editing %}
 <h2>Colors and sizes of this product</h2>

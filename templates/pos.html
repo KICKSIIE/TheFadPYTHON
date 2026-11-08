@@ -2,11 +2,11 @@
 {% from "_macros.html" import thumb, swatch %}
 {% block title %}New sale{% endblock %}
 {% block content %}
-<h1>New sale</h1>
+<div class="head"><div><span class="eyebrow">Point of sale</span><h1>New sale</h1><p class="muted small">Available items first. Build your cart, then complete the sale.</p></div></div>
 <div class="pos">
   <section>
     <form class="toolbar" method="get">
-      <input name="q" placeholder="Search products" value="{{ q }}">
+      <input name="q" aria-label="Search products" placeholder="Search products" value="{{ q }}">
       <select name="category" aria-label="Category">
         <option value="">All categories</option>
         {% for cid, cname in categories %}<option value="{{ cid }}" {{ 'selected' if category == cid }}>{{ cname }}</option>{% endfor %}
@@ -16,7 +16,7 @@
     {% if products %}
     <div class="grid small">
       {% for p in products %}
-      <form class="tile" method="post" action="{{ url_for('pos.add') }}">
+      <form class="tile {{ 'sold-out' if p.current_stock <= 0 else '' }}" method="post" action="{{ url_for('pos.add') }}">
         <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
         <input type="hidden" name="product_id" value="{{ p.product_id }}">
         <span class="tile-top">{{ thumb(p.image_id, p.product_name, 'sm') }}<span class="tile-title">{{ p.product_name }}{% if p.color %} <span class="chip">{{ swatch(p.color, 'sm') }}{{ p.color }}</span>{% endif %}{% if p.size %} <span class="chip">{{ p.size }}</span>{% endif %}</span></span>
