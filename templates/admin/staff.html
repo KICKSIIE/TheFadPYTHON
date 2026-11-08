@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Staff{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Staff</h1>
+  <div><a class="btn" href="{{ url_for('admin_staff.new') }}">Add staff</a></div>
+</div>
+{% if staff %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Station</th><th>Since</th><th>Status</th><th></th></tr></thead>
+  <tbody>
+  {% for s in staff %}
+    <tr class="{{ '' if s.is_active else 'dim' }}">
+      <td>{{ s.first_name }} {{ s.last_name }}<div class="muted small">{{ s.email }}</div></td>
+      <td>{{ s.username }}</td>
+      <td>{{ 'Admin' if s.user_type == 'AD' else 'Cashier' }}</td>
+      <td>{{ s.station or '' }}</td>
+      <td>{{ s.hired_on.strftime('%b %d, %Y') }}</td>
+      <td>{% if not s.is_active %}<span class="badge">Inactive</span>{% elif s.clocked_in %}<span class="badge ok">Clocked in</span>{% else %}Off shift{% endif %}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_staff.edit', user_id=s.user_id) }}">Edit</a>
+        {% if s.user_id != session.user_id %}
+        <form method="post" class="inline" action="{{ url_for('admin_staff.set_active', user_id=s.user_id) }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <input type="hidden" name="active" value="{{ '0' if s.is_active else '1' }}">
+          <button class="btn btn-sm {{ 'btn-danger' if s.is_active else 'btn-quiet' }}" type="submit">{{ 'Deactivate' if s.is_active else 'Reactivate' }}</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No staff accounts found.</p>
+{% endif %}
+{% endblock %}

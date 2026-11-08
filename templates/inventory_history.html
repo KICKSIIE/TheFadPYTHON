@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Stock movements{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Stock movements</h1>
+  <a class="btn btn-quiet" href="{{ url_for('inventory.index') }}">Back to inventory</a>
+</div>
+{% include "_movements.html" %}
+{% endblock %}

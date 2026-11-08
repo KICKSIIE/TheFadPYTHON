@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Payroll{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Payroll</h1>
+  <div><a class="btn btn-quiet" href="{{ url_for('payroll.download', start=start.isoformat(), end=end.isoformat()) }}">Download CSV</a></div>
+</div>
+
+<form class="toolbar" method="get">
+  <input type="date" name="start" value="{{ start.isoformat() }}" aria-label="From">
+  <input type="date" name="end" value="{{ end.isoformat() }}" aria-label="To">
+  <button class="btn" type="submit">Show</button>
+  <span class="preset-group">
+    {% for label, a, b in presets %}<a class="btn btn-quiet btn-sm {{ 'on' if a == start and b == end else '' }}" href="{{ url_for('payroll.index', start=a.isoformat(), end=b.isoformat()) }}">{{ label }}</a>{% endfor %}
+  </span>
+</form>
+
+<div class="stats compact">
+  <div class="stat"><span class="stat-num">{{ totals.gross_pay|peso }}</span><span class="muted">Gross pay</span></div>
+  <div class="stat"><span class="stat-num">{{ '%.1f'|format(totals.regular_hours) }}</span><span class="muted">Regular hours</span></div>
+  <div class="stat"><span class="stat-num">{{ '%.1f'|format(totals.overtime_hours) }}</span><span class="muted">Overtime hours (x{{ ot }})</span></div>
+  <div class="stat {{ 'alert' if open_shifts }}"><span class="stat-num">{{ open_shifts }}</span><span class="muted">Open shifts, not counted</span></div>
+</div>
+
+{% if lines %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Name</th><th class="num">Rate / hr</th><th class="num">Days</th><th class="num">Late</th><th class="num">Absent</th>
+    <th class="num">Regular hrs</th><th class="num">OT hrs</th><th class="num">Regular pay</th><th class="num">OT pay</th><th class="num">Gross pay</th></tr></thead>
+  <tbody>{% for x in lines %}
+    <tr class="{{ 'dim' if not x.days_worked }}">
+      <td>{{ x.full_name }}</td><td class="num">{{ x.hourly_rate|peso }}</td><td class="num">{{ x.days_worked }}</td>
+      <td class="num">{{ x.late_days or '' }}</td><td class="num">{{ x.absent_days or '' }}</td>
+      <td class="num">{{ '%.2f'|format(x.regular_hours) }}</td><td class="num">{{ '%.2f'|format(x.overtime_hours) if x.overtime_hours else '' }}</td>
+      <td class="num">{{ x.regular_pay|peso }}</td><td class="num">{{ x.overtime_pay|peso if x.overtime_pay else '' }}</td>
+      <td class="num strong">{{ x.gross_pay|peso }}</td>
+    </tr>{% endfor %}
+  </tbody>
+  <tfoot><tr><td colspan="5">Total</td><td class="num">{{ '%.2f'|format(totals.regular_hours) }}</td><td class="num">{{ '%.2f'|format(totals.overtime_hours) }}</td>
+    <td class="num">{{ totals.regular_pay|peso }}</td><td class="num">{{ totals.overtime_pay|peso }}</td><td class="num">{{ totals.gross_pay|peso }}</td></tr></tfoot>
+</table></div>
+<p class="muted small foot">Gross pay before SSS, PhilHealth, Pag-IBIG and tax. Overtime is hours beyond {{ shift_hours|int }} per shift.</p>
+{% else %}<p class="empty">No staff or shifts in this period.</p>{% endif %}
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Overtime{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Attendance</h1>
+  <div><a class="btn" href="{{ url_for('attendance.new_overtime') }}">Allow overtime</a></div>
+</div>
+{% include "_attendance_tabs.html" %}
+<form class="toolbar" method="get">
+  <input type="date" name="start" value="{{ start.isoformat() }}" aria-label="From">
+  <input type="date" name="end" value="{{ end.isoformat() }}" aria-label="To">
+  <button class="btn" type="submit">Show</button>
+</form>
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Date</th><th>Name</th><th>Time in</th><th>Time out</th><th class="num">Grace</th><th>Status</th><th class="num">Hours</th><th>Note</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr class="{{ 'dim' if r.status == 'Not used' else '' }}">
+      <td>{{ r.work_date.strftime('%a, %b %d') }}</td>
+      <td>{{ r.full_name }}</td>
+      <td>{{ r.start_time.strftime('%I:%M %p') }}</td>
+      <td>{{ r.end_time.strftime('%I:%M %p') }}</td>
+      <td class="num">{{ r.grace_minutes }} min</td>
+      <td><span class="badge {{ 'ok' if r.status in ('Done', 'In progress') else ('warn' if r.status == 'Allowed' else '') }}">{{ r.status }}</span></td>
+      <td class="num">{{ '%.2f'|format(r.hours_worked) if r.hours_worked is not none else '' }}</td>
+      <td class="muted small">{{ r.note or '' }}</td>
+      <td class="actions">
+        {% if r.status == 'Allowed' %}
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_overtime', permit_id=r.permit_id) }}">Edit</a>
+        <form method="post" class="inline" action="{{ url_for('attendance.cancel_overtime', permit_id=r.permit_id) }}" onsubmit="return confirm('Cancel this overtime?');">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Cancel</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="empty">No overtime in this range. Use Allow overtime to add some.</p>{% endif %}
+{% endblock %}

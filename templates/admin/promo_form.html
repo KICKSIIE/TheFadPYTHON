@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit promo' if editing else 'Create promo' }}{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>{{ 'Edit promo' if editing else 'Create promo' }}</h1>
+  <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Back</a>
+</div>
+<div class="stitch"></div>
+<form class="form" method="post" action="{{ url_for('admin_promos.edit', discount_id=discount_id) if editing else url_for('admin_promos.new') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="discount_name">Promo name</label>
+  <input id="discount_name" name="discount_name" value="{{ promo.discount_name or '' }}" maxlength="100" required>
+  <label for="discount_percentage">Discount percent (1 to 99)</label>
+  <input id="discount_percentage" name="discount_percentage" type="number" min="1" max="99" value="{{ promo.discount_percentage or '' }}" required>
+  <label for="start_date">Starts</label>
+  <input id="start_date" name="start_date" type="date" value="{{ promo.start_date.isoformat() if promo.start_date and promo.start_date.isoformat else (promo.start_date or today.isoformat()) }}" required>
+  <label for="end_date">Ends</label>
+  <input id="end_date" name="end_date" type="date" value="{{ promo.end_date.isoformat() if promo.end_date and promo.end_date.isoformat else (promo.end_date or '') }}" required>
+  {% if not editing %}
+  <label for="scope">Apply to</label>
+  <select id="scope" name="scope">
+    <option value="NONE" {{ 'selected' if promo.scope == 'NONE' }}>No products yet (apply later)</option>
+    <option value="PRODUCT" {{ 'selected' if promo.scope == 'PRODUCT' }}>One product</option>
+    <option value="STORE" {{ 'selected' if promo.scope == 'STORE' }}>Whole store</option>
+  </select>
+  <label for="product_id">Product</label>
+  <select id="product_id" name="product_id">
+    {% for p in products %}<option value="{{ p.product_id }}">{{ p.name }}</option>{% endfor %}
+  </select>
+  {% endif %}
+  <div class="form-actions">
+    <button class="btn" type="submit">{{ 'Save changes' if editing else 'Create promo' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Cancel</a>
+  </div>
+</form>
+
+{% if editing %}
+<h2>Products on this promo</h2>
+{% if linked %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Product</th><th class="num">Items</th><th class="num">Normal price</th><th class="num">Promo price</th><th></th></tr></thead>
+  <tbody>{% for p in linked %}
+    <tr><td>{{ p.name }}</td><td class="num">{{ p.variants }}</td><td class="num">{{ p.base|peso }}</td><td class="num">{{ p.promo|peso }}</td>
+      <td class="actions"><form method="post" class="inline" action="{{ url_for('admin_promos.unlink', product_id=p.product_id) }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-danger" type="submit">Remove</button></form></td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}<p class="empty">No products are on this promo.</p>{% endif %}
+
+{% if promo.status == 'Active' %}
+<h2>Add this promo to products</h2>
+<form class="toolbar" method="post" action="{{ url_for('admin_promos.apply', discount_id=discount_id) }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <select name="scope" aria-label="Scope">
+    <option value="PRODUCT">One product</option>
+    <option value="STORE">Whole store</option>
+  </select>
+  <select name="product_id" aria-label="Product">
+    {% for p in products %}<option value="{{ p.product_id }}">{{ p.name }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Apply promo</button>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Attendance{% endblock %}
+{% block content %}
+<div class="head"><h1>Attendance</h1></div>
+{% include "_attendance_tabs.html" %}
+
+{% if open_row and st.overdue %}
+<section class="status-card warn-card">
+  <div>
+    <strong>You did not clock out</strong>
+    <p class="muted">Clocked in {{ open_row.time_in|dt }}. When did you finish?</p>
+    <form class="toolbar" method="post" action="{{ url_for('attendance.missed_clock_out') }}">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <input type="datetime-local" name="time_out" value="{{ st.guess }}" min="{{ st.min }}" max="{{ st.max }}" required aria-label="Finish time">
+      <button class="btn" type="submit">Save clock-out</button>
+    </form>
+  </div>
+</section>
+{% elif open_row %}
+<section class="status-card">
+  <div class="shift-info">
+    <strong>On shift since {{ open_row.time_in|dt }}</strong>
+    <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ st.pct }}"><span style="width: {{ st.pct }}%"></span></div>
+    <p class="muted">{{ '%.1f'|format(st.worked) }} of {{ shift|int }} hours{% if not st.can_out %} &middot; clock out from {{ st.opens_at.strftime('%I:%M %p') }}{% endif %}</p>
+  </div>
+  <form method="post" action="{{ url_for('attendance.clock_out') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="btn" type="submit" {{ '' if st.can_out else 'disabled' }}>Clock out</button>
+  </form>
+</section>
+{% else %}
+<section class="status-card">
+  <div><strong>{{ 'Shift done for today' if today_done else 'Off shift' }}</strong></div>
+  <form method="post" action="{{ url_for('attendance.clock_in') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="btn" type="submit" {{ 'disabled' if today_done }}>Clock in</button>
+  </form>
+</section>
+{% endif %}
+
+{% if ot %}
+<section class="status-card ot-card">
+  <div class="shift-info">
+    <strong>Overtime today &middot; {{ ot.start.strftime('%I:%M %p') }} to {{ ot.end.strftime('%I:%M %p') }}</strong>
+    <p class="muted">
+      {% if ot.state == 'open' %}On overtime. It ends by {{ ot.end.strftime('%I:%M %p') }}.
+      {% elif ot.state == 'done' %}Overtime done.
+      {% elif ot.state == 'over' %}The overtime window has ended.
+      {% elif ot.state == 'early' %}Starts at {{ ot.start.strftime('%I:%M %p') }}.
+      {% elif ot.state == 'wait' %}Clock out of your regular shift first.
+      {% else %}Clock in by {{ ot.grace_until.strftime('%I:%M %p') }} to be on time.{% if ot.late %} <span class="badge warn">Late</span>{% endif %}{% endif %}
+      {% if permit.note %}<span class="muted small"> &middot; {{ permit.note }}</span>{% endif %}
+    </p>
+  </div>
+  {% if ot.state == 'open' %}
+  <form method="post" action="{{ url_for('attendance.overtime_out') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn" type="submit">End overtime</button>
+  </form>
+  {% elif ot.state in ('early', 'wait', 'ready') %}
+  <form method="post" action="{{ url_for('attendance.overtime_in') }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <button class="btn" type="submit" {{ '' if ot.state == 'ready' else 'disabled' }}>Start overtime</button>
+  </form>
+  {% endif %}
+</section>
+{% endif %}
+{% if upcoming %}
+<p class="muted small">Upcoming overtime:
+  {% for p in upcoming %}{{ p.work_date.strftime('%a, %b %d') }} {{ p.start_time.strftime('%I:%M %p') }} to {{ p.end_time.strftime('%I:%M %p') }}{{ ', ' if not loop.last }}{% endfor %}</p>
+{% endif %}
+
+<h2>Recent shifts</h2>
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Date</th><th>Type</th><th>In</th><th>Out</th><th class="num">Hours</th><th>Status</th><th>Note</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr>
+      <td>{{ r.time_in.strftime('%a, %b %d') }}</td>
+      <td>{% if r.shift_type == 'Overtime' %}<span class="badge ot">Overtime</span>{% else %}Regular{% endif %}</td>
+      <td>{{ r.time_in.strftime('%I:%M %p') }}</td>
+      <td>{{ r.time_out.strftime('%I:%M %p') if r.time_out else 'On shift' }}</td>
+      <td class="num">{{ '%.2f'|format(r.total_hours) if r.total_hours is not none else '' }}</td>
+      <td><span class="badge {{ 'ok' if r.status == 'Present' else 'warn' }}">{{ r.status }}</span></td>
+      <td class="muted small">{{ r.note or '' }}</td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="empty">No shifts yet.</p>{% endif %}
+{% endblock %}

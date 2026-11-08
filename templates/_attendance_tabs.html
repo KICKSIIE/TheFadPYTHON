@@ -1,0 +1,8 @@
+{% if current_user.role == 'Admin' %}
+<div class="tabs" role="navigation" aria-label="Attendance">
+  <a class="tab {{ 'on' if tab == 'mine' else '' }}" href="{{ url_for('attendance.index') }}">My shift</a>
+  <a class="tab {{ 'on' if tab == 'everyone' else '' }}" href="{{ url_for('attendance.everyone') }}">Everyone</a>
+  <a class="tab {{ 'on' if tab == 'overtime' else '' }}" href="{{ url_for('attendance.overtime') }}">Overtime</a>
+  <a class="tab {{ 'on' if tab == 'schedule' else '' }}" href="{{ url_for('attendance.schedule') }}">Schedule</a>
+</div>
+{% endif %}

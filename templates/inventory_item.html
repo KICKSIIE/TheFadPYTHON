@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}{{ product.product_name }}{% if product.color %} - {{ product.color }}{% endif %}{% if product.size %} ({{ product.size }}){% endif %} stock{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>{{ product.product_name }}{% if product.color %} <span class="chip">{{ product.color }}</span>{% endif %}{% if product.size %} <span class="chip">{{ product.size }}</span>{% endif %}</h1>
+  <a class="btn btn-quiet" href="{{ url_for('inventory.index') }}">Back</a>
+</div>
+<p><strong>{{ product.current_stock }}</strong> in stock</p>
+<div class="stitch"></div>
+<div class="forms-row">
+  {% for action, title, button in [('in', 'Stock in', 'Add'), ('out', 'Stock out', 'Remove'), ('adjust', 'Stock count', 'Set')] %}
+  <form class="form" method="post" action="{{ url_for('inventory.move', product_id=product.product_id) }}">
+    <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="{{ action }}">
+    <h2 class="flush">{{ title }}</h2>
+    <label for="q-{{ action }}">{{ 'Counted stock' if action == 'adjust' else 'Quantity' }}</label>
+    <input id="q-{{ action }}" name="quantity" type="number" min="{{ 0 if action == 'adjust' else 1 }}" required>
+    <button class="btn block" type="submit">{{ button }}</button>
+  </form>
+  {% endfor %}
+</div>
+<h2>Recent movements</h2>
+{% include "_movements.html" %}
+{% endblock %}

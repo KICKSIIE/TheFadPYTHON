@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_macros.html" import thumb, swatch %}
+{% block title %}New sale{% endblock %}
+{% block content %}
+<h1>New sale</h1>
+<div class="pos">
+  <section>
+    <form class="toolbar" method="get">
+      <input name="q" placeholder="Search products" value="{{ q }}">
+      <select name="category" aria-label="Category">
+        <option value="">All categories</option>
+        {% for cid, cname in categories %}<option value="{{ cid }}" {{ 'selected' if category == cid }}>{{ cname }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-quiet" type="submit">Search</button>
+    </form>
+    {% if products %}
+    <div class="grid small">
+      {% for p in products %}
+      <form class="tile" method="post" action="{{ url_for('pos.add') }}">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <input type="hidden" name="product_id" value="{{ p.product_id }}">
+        <span class="tile-top">{{ thumb(p.image_id, p.product_name, 'sm') }}<span class="tile-title">{{ p.product_name }}{% if p.color %} <span class="chip">{{ swatch(p.color, 'sm') }}{{ p.color }}</span>{% endif %}{% if p.size %} <span class="chip">{{ p.size }}</span>{% endif %}</span></span>
+        <span>{% if p.discount_name %}<s class="muted">{{ p.base_price|peso }}</s> {% endif %}<strong>{{ p.current_price|peso }}</strong></span>
+        {% if p.discount_name %}<span class="badge promo">{{ p.discount_percentage }}% off</span>{% endif %}
+        <span class="muted small">{{ p.current_stock }} in stock</span>
+        {% if p.current_stock > 0 %}
+        <span class="add-row"><input name="quantity" type="number" min="1" max="{{ p.current_stock }}" value="1" aria-label="Quantity"><button class="btn" type="submit">Add</button></span>
+        {% else %}<span class="badge warn">Sold out</span>{% endif %}
+      </form>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty">No products found.</p>{% endif %}
+  </section>
+
+  <aside class="cart">
+    <h2 class="flush">Cart</h2>
+    {% if lines %}
+      <table class="table compact"><tbody>
+      {% for l in lines %}
+        <tr>
+          <td>{{ l.product.display_name }}<div class="muted small">{{ l.product.current_price|peso }} each</div>{% if l.short %}<div class="warn-text small">Only {{ l.product.current_stock }} in stock</div>{% endif %}</td>
+          <td>
+            <form method="post" action="{{ url_for('pos.update') }}" class="stepper">
+              <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+              <input type="hidden" name="product_id" value="{{ l.product.product_id }}">
+              <button class="btn btn-sm btn-quiet" type="submit" name="delta" value="-1" aria-label="Fewer">&minus;</button>
+              <span class="stepper-qty" aria-label="Quantity">{{ l.qty }}</span>
+              <button class="btn btn-sm btn-quiet" type="submit" name="delta" value="1" aria-label="More">+</button>
+              <button class="btn btn-sm btn-danger" type="submit" name="quantity" value="0" aria-label="Remove">&times;</button>
+            </form>
+          </td>
+          <td class="num">{{ l.line_total|peso }}</td>
+        </tr>
+      {% endfor %}
+      </tbody></table>
+      <p class="cart-total"><span>Total</span><strong>{{ total|peso }}</strong></p>
+
+      <form method="post" action="{{ url_for('pos.checkout') }}" class="form flat">
+        <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+        <label for="fulfillment_type">Order type</label>
+        <select id="fulfillment_type" name="fulfillment_type"><option>Walk-in</option><option>Delivery</option></select>
+        <label for="payment_method">Payment</label>
+        <select id="payment_method" name="payment_method"><option>Cash</option><option>GCash</option></select>
+        <p class="field-note">Customer details: required for delivery.</p>
+        <label for="customer_name">Customer name</label>
+        <input id="customer_name" name="customer_name" maxlength="100">
+        <label for="customer_contact">Contact number</label>
+        <input id="customer_contact" name="customer_contact" maxlength="20">
+        <label for="delivery_address">Delivery address</label>
+        <input id="delivery_address" name="delivery_address" maxlength="255">
+        <button class="btn block" type="submit">Complete sale</button>
+      </form>
+      <form method="post" action="{{ url_for('pos.clear') }}"><input type="hidden" name="_csrf" value="{{ csrf_token() }}"><button class="btn btn-sm btn-quiet" type="submit">Clear cart</button></form>
+    {% else %}
+      <p class="empty">The cart is empty. Add products from the list.</p>
+    {% endif %}
+  </aside>
+</div>
+{% endblock %}

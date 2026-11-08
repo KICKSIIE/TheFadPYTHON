@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Categories{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Categories</h1>
+  <a class="btn btn-quiet" href="{{ url_for('admin_products.index') }}">Back</a>
+</div>
+
+<form class="toolbar" method="post" action="{{ url_for('admin_products.categories') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input name="category_name" placeholder="Category name" maxlength="50" required>
+  <input name="display_order" type="number" min="0" value="0" aria-label="Order on the shop (lower shows first)" title="Lower shows first" class="narrow">
+  <button class="btn" type="submit">Add category</button>
+</form>
+{% if categories %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Name</th><th>Display order</th><th class="num">Products</th><th></th></tr></thead>
+  <tbody>
+  {% for c in categories %}
+    <tr>
+      <td colspan="3">
+        <form method="post" class="row-form" id="cat{{ c.category_id }}" action="{{ url_for('admin_products.update_category', category_id=c.category_id) }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <input name="category_name" value="{{ c.category_name }}" maxlength="50" required aria-label="Name">
+          <input name="display_order" type="number" min="0" value="{{ c.display_order }}" class="narrow" aria-label="Display order">
+          <span class="muted">{{ c.product_count }} product{{ '' if c.product_count == 1 else 's' }}</span>
+        </form>
+      </td>
+      <td class="actions">
+        <button class="btn btn-sm btn-quiet" type="submit" form="cat{{ c.category_id }}">Save</button>
+        <form method="post" class="inline" action="{{ url_for('admin_products.delete_category', category_id=c.category_id) }}"
+              onsubmit="return confirm('Delete this category?');">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">Delete</button>
+        </form>
+      </td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No categories yet. Add one above, such as Tops or Bottoms.</p>
+{% endif %}
+{% endblock %}

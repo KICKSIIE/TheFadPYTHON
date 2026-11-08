@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% set public_page = true %}
+{% from "_macros.html" import thumb, swatch, stock_line %}
+{% block title %}{{ item.product_name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('catalog.index') }}">Shop</a>
+  {% if category %} / <a href="{{ url_for('catalog.index', category=item.category_id) }}">{{ category }}</a>{% endif %} / {{ item.product_name }}</p>
+<div class="detail">
+  <div class="detail-img">
+    {% if main_photo %}
+    <a id="main-photo-link" class="zoom" href="{{ photo_urls[main_index] }}"
+       data-lightbox-urls='{{ photo_urls|tojson }}' data-lightbox-index="{{ main_index }}"
+       data-lightbox-name="{{ item.product_name }}" title="View full screen">
+      {{ thumb(main_photo, item.product_name, 'detail') }}
+    </a>
+    <p class="muted small zoom-hint">Click to enlarge.</p>
+    {% else %}
+    {{ thumb(None, item.product_name, 'detail') }}
+    {% endif %}
+    {% if photo_ids|length > 1 %}
+    <div class="gallery-thumbs">
+      {% for pid in photo_ids %}
+      <a href="{{ url_for('catalog.product', product_id=item.product_id, color=selected or None, photo=pid) }}"
+         data-full="{{ photo_urls[loop.index0] }}" data-index="{{ loop.index0 }}"
+         class="{{ 'on' if pid == main_photo else '' }}" aria-label="Show photo {{ loop.index }}"
+         {% if pid == main_photo %}aria-current="true"{% endif %}>{{ thumb(pid, item.product_name, 'sm') }}</a>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="detail-info">
+    <h1>{{ item.product_name }}</h1>
+    <p class="detail-price">
+      {% if price_min != base_price or price_max != base_price %}<s class="muted">{{ base_price|peso }}</s> {% endif %}
+      <strong>{% if price_min != price_max %}From {% endif %}{{ price_min|peso }}</strong>
+      {% if price_min < base_price %}<span class="badge promo">Promo price</span>{% endif %}
+    </p>
+    <p class="detail-stock">{{ stock_line(status, stock) }}{% if selected %}<span class="muted small"> in {{ selected }}</span>{% endif %}</p>
+
+    {% if colors %}
+    <h2 class="opt-title">Color: <span class="opt-value">{{ selected }}</span></h2>
+    <div class="color-row">
+      {% for c in colors %}
+      <a class="color-opt {{ 'on' if c.name == selected else '' }} {{ 'out' if c.stock == 0 else '' }}"
+         href="{{ url_for('catalog.product', product_id=c.first_id, color=c.name) }}"
+         title="{{ c.name }}{{ ' (sold out)' if c.stock == 0 }}" {% if c.name == selected %}aria-current="true"{% endif %}>
+        {{ swatch(c.name, 'lg') }}<span class="color-name">{{ c.name }}</span></a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if variants|selectattr('size')|list %}
+    <h2 class="opt-title">Size</h2>
+    <div class="size-grid">
+      {% for v in variants if v.size %}
+      <div class="size-opt {{ 'out' if v.current_stock == 0 else ('low' if v.current_stock <= low_stock_limit else '') }}">
+        <span class="size-name">{{ v.size }}</span>
+        <span class="size-stock">{{ 'Sold out' if v.current_stock == 0 else v.current_stock ~ ' left' }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="order-box">
+      <a class="btn" href="{{ store.facebook }}" target="_blank" rel="noopener">Order on Facebook</a>
+      <span class="muted small">Message our official page to order.</span>
+    </div>
+
+    {% if item.description %}<h2 class="opt-title">Details</h2><p class="desc">{{ item.description }}</p>{% endif %}
+  </div>
+</div>
+{% endblock %}

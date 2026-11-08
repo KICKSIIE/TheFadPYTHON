@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% from "_macros.html" import thumb, swatch %}
+{% block title %}{{ 'Edit product' if editing else 'Add product' }}{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>{{ 'Edit product' if editing else 'Add product' }}</h1>
+  <a class="btn btn-quiet" href="{{ url_for('admin_products.index') }}">Back</a>
+</div>
+{% if not categories %}
+  <p class="empty">There are no categories yet. <a href="{{ url_for('admin_products.categories') }}">Add a category</a> before adding a product.</p>
+{% else %}
+<form class="form wide" method="post" enctype="multipart/form-data"
+      action="{{ url_for('admin_products.edit', product_id=product_id) if editing else url_for('admin_products.new') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="product_name">Product name</label>
+  <input id="product_name" name="product_name" value="{{ product.product_name or '' }}" maxlength="100" required autofocus>
+
+  <label for="description">Description</label>
+  <textarea id="description" name="description" rows="4" maxlength="1000" placeholder="Material, fit, care, anything customers should know">{{ product.description or '' }}</textarea>
+
+  <div class="two">
+    <div>
+      <label for="base_price">Price (PHP)</label>
+      <input id="base_price" name="base_price" inputmode="decimal" value="{{ product.base_price or '' }}" required>
+    </div>
+    <div>
+      <label for="category_id">Category</label>
+      <select id="category_id" name="category_id" required>
+        {% for c in categories %}<option value="{{ c.category_id }}" {{ 'selected' if product.category_id|string == c.category_id|string }}>{{ c.category_name }}</option>{% endfor %}
+      </select>
+    </div>
+  </div>
+
+  {% if editing %}
+    <div class="two">
+      <div>
+        <label for="color">Color of this item</label>
+        <input id="color" name="color" value="{{ product.color or '' }}" maxlength="30" placeholder="Blank if none">
+      </div>
+      <div>
+        <label for="size">Size of this item</label>
+        <input id="size" name="size" value="{{ product.size or '' }}" maxlength="20" placeholder="Blank if none">
+      </div>
+    </div>
+  {% else %}
+    <div class="two">
+      <div>
+        <label for="colors">Colors</label>
+        <input id="colors" name="colors" value="{{ product.colors or '' }}" placeholder="Black, Navy, Sage">
+      </div>
+      <div>
+        <label for="sizes">Sizes</label>
+        <input id="sizes" name="sizes" value="{{ product.sizes or '' }}" placeholder="S, M, L, XL">
+      </div>
+    </div>
+    <p class="field-note">Separate with commas. Leave blank if not needed.</p>
+  {% endif %}
+
+  {% if editing %}
+    <label>Photos for this color</label>
+    <div class="photo-now">{{ thumb(current.image_id, current.product_name, 'md') }}
+      <div><a class="btn btn-quiet" href="{{ url_for('admin_products.photos', product_id=product_id) }}">Manage photos</a>
+      </div></div>
+  {% else %}
+    <label for="photos">Photos</label>
+    <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple>
+    <p class="field-note">First photo is the cover. Shared by every color; change per color later.</p>
+  {% endif %}
+
+  {% if editing %}
+  <label class="toggle spaced"><input type="checkbox" name="apply_all" value="1" checked><span>Apply to all colors and sizes</span></label>
+  {% endif %}
+
+  <div class="form-actions">
+    <button class="btn" type="submit">{{ 'Save changes' if editing else 'Add product' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('admin_products.index') }}">Cancel</a>
+  </div>
+</form>
+
+{% if editing %}
+<h2>Colors and sizes of this product</h2>
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Color</th><th>Size</th><th class="num">Stock</th><th>Status</th><th></th></tr></thead>
+  <tbody>{% for v in variants %}
+    <tr class="{{ '' if v.is_active else 'dim' }}">
+      <td>{% if v.color %}<span class="with-swatch">{{ swatch(v.color, 'sm') }}{{ v.color }}</span>{% else %}<span class="muted">No color</span>{% endif %}</td>
+      <td>{% if v.size %}<span class="chip">{{ v.size }}</span>{% else %}<span class="muted">No size</span>{% endif %}
+          {% if v.product_id == product_id %}<span class="muted small"> (editing)</span>{% endif %}</td>
+      <td class="num">{{ v.current_stock }}</td>
+      <td>{{ 'Active' if v.is_active else 'Inactive' }}</td>
+      <td class="actions">{% if v.product_id != product_id %}<a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=v.product_id) }}">Edit</a>{% endif %}
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', product_id=v.product_id) }}">Stock</a></td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+<h2>Add a color or size</h2>
+<form class="toolbar" method="post" action="{{ url_for('admin_products.add_variant', product_id=product_id) }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input name="color" placeholder="New color" maxlength="30" aria-label="Color">
+  <input name="size" placeholder="New size" maxlength="20" aria-label="Size">
+  <button class="btn" type="submit">Add</button>
+</form>
+{% endif %}
+{% endif %}
+{% endblock %}

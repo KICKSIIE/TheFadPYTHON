@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="stitch"></div>
+<p>This screen is a placeholder at <code>{{ request.path }}</code>.</p>
+<p class="muted">Owner: {{ owner }}. Tables: {{ tables }}. Build it in <code>modules/{{ request.endpoint.split('.')[0] }}.py</code> and replace this template.</p>
+{% endblock %}

@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Promo manager{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Promo manager</h1>
+  <a class="btn" href="{{ url_for('admin_promos.new') }}">Create promo</a>
+</div>
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Promo</th><th class="num">Discount</th><th>Dates</th><th>Status</th><th>Products</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr class="{{ 'dim' if r.status == 'Ended' else '' }}">
+      <td>{{ r.discount_name }}</td>
+      <td class="num">{{ r.discount_percentage }}%</td>
+      <td>{{ r.start_date.strftime('%b %d') }} to {{ r.end_date.strftime('%b %d, %Y') }}</td>
+      <td><span class="badge {{ 'ok' if r.status == 'Active' else '' }}">{{ r.status }}</span></td>
+      <td>{% if r.products_linked == 0 %}<span class="muted">None</span>{% else %}{{ r.products_linked }}: {{ r.linked_products|truncate(40) }}{% endif %}</td>
+      <td class="actions">
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_promos.edit', discount_id=r.discount_id) }}">{{ 'View' if r.status == 'Ended' else 'Edit' }}</a>
+        {% if r.status == 'Active' %}
+        <form method="post" class="inline" action="{{ url_for('admin_promos.end_now', discount_id=r.discount_id) }}" onsubmit="return confirm('End this promo now?');">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+          <button class="btn btn-sm btn-danger" type="submit">End now</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No promos yet. Create one, for example 20% off a product for a week.</p>
+{% endif %}
+{% endblock %}

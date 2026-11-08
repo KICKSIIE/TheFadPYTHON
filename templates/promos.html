@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Promos{% endblock %}
+{% block content %}
+<h1>Promos running now</h1>
+<div class="stitch"></div>
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Promo</th><th class="num">Discount</th><th>Ends</th><th>Applies to</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr><td>{{ r.discount_name }}</td><td class="num">{{ r.discount_percentage }}%</td><td>{{ r.end_date.strftime('%b %d, %Y') }}</td>
+        <td>{% if r.products_linked == 0 %}<span class="muted">No products yet</span>{% else %}{{ r.linked_products }}{% endif %}</td></tr>
+  {% endfor %}</tbody>
+</table></div>
+{% else %}
+  <p class="empty">No promos are running today.</p>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Schedule{% endblock %}
+{% block content %}
+<div class="head"><h1>Attendance</h1></div>
+{% include "_attendance_tabs.html" %}
+<form class="form" method="post" action="{{ url_for('attendance.schedule') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <h2 class="flush">Regular shift</h2>
+  <div class="two">
+    <div><label for="shift_start">Time in</label><input id="shift_start" name="shift_start" type="time" value="{{ s.shift_start }}" required></div>
+    <div><label for="shift_end">Time out</label><input id="shift_end" name="shift_end" type="time" value="{{ s.shift_end }}" required></div>
+  </div>
+  <label for="grace_minutes">Grace for time in (minutes)</label>
+  <input id="grace_minutes" name="grace_minutes" type="number" min="0" max="120" value="{{ s.grace_minutes }}" class="narrow" required>
+  <div class="form-actions"><button class="btn" type="submit">Save schedule</button></div>
+</form>
+{% endblock %}

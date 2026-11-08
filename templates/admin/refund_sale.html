@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Refund order #{{ sale.sale_id }}{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Refund order #{{ sale.sale_id }}</h1>
+  <a class="btn btn-quiet" href="{{ url_for('refunds.index') }}">Back to refunds</a>
+</div>
+<p>{{ sale.sale_date|dt }}, {{ sale.fulfillment_type }}, total {{ sale.total_amount|peso }}.
+   <span class="badge">{{ sale.order_status|label }}</span></p>
+{% if not can_refund %}
+  <p class="empty">Only completed orders can be refunded. This one is {{ sale.order_status|label|lower }}.</p>
+{% endif %}
+{% for i in items %}
+  {% set left = i.quantity - i.quantity_refunded %}
+  <div class="refund-item">
+    <div>
+      <strong>{{ i.product_name }}</strong>
+      <div class="muted small">{{ i.quantity }} sold at {{ i.unit_price_at_sale|peso }}, {{ i.quantity_refunded }} refunded</div>
+    </div>
+    {% if can_refund and left > 0 %}
+    <form class="toolbar" method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="item_id" value="{{ i.item_id }}">
+      <input name="quantity" type="number" min="1" max="{{ left }}" value="1" class="narrow" aria-label="Quantity to refund">
+      <select name="method" aria-label="Refund method"><option>Cash</option><option>GCash</option></select>
+      <input name="reason" placeholder="Reason" maxlength="200" aria-label="Reason">
+      <button class="btn" type="submit">Refund</button>
+    </form>
+    {% else %}<span class="muted small">{{ 'Fully refunded' if left == 0 else '' }}</span>{% endif %}
+  </div>
+{% endfor %}
+{% endblock %}

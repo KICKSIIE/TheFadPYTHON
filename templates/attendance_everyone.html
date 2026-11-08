@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Attendance: everyone{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Attendance</h1>
+  <div><a class="btn" href="{{ url_for('attendance.new_shift') }}">Add shift</a></div>
+</div>
+{% include "_attendance_tabs.html" %}
+
+<form class="toolbar" method="get">
+  <input type="date" name="start" value="{{ start.isoformat() }}" aria-label="From">
+  <input type="date" name="end" value="{{ end.isoformat() }}" aria-label="To">
+  <select name="user_id" aria-label="Staff member">
+    <option value="">Everyone</option>
+    {% for s in staff %}<option value="{{ s.user_id }}" {{ 'selected' if user_id == s.user_id }}>{{ s.first_name }} {{ s.last_name }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Show</button>
+  <span class="preset-group">
+    {% for label, a, b in presets %}<a class="btn btn-quiet btn-sm" href="{{ url_for('attendance.everyone', start=a.isoformat(), end=b.isoformat(), user_id=user_id) }}">{{ label }}</a>{% endfor %}
+  </span>
+</form>
+
+<div class="stats compact">
+  <div class="stat"><span class="stat-num">{{ counts.Present }}</span><span class="muted">Present</span></div>
+  <div class="stat {{ 'alert' if counts.Late }}"><span class="stat-num">{{ counts.Late }}</span><span class="muted">Late</span></div>
+  <div class="stat {{ 'alert' if counts.Absent }}"><span class="stat-num">{{ counts.Absent }}</span><span class="muted">Absent</span></div>
+  <div class="stat"><span class="stat-num">{{ '%.1f'|format(hours) }}</span><span class="muted">Hours worked</span></div>
+  <div class="stat"><span class="stat-num">{{ '%.1f'|format(overtime) }}</span><span class="muted">Overtime hours</span></div>
+</div>
+
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>Date</th><th>Name</th><th>Type</th><th>In</th><th>Out</th><th class="num">Hours</th><th>Status</th><th>Note</th><th></th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr class="{{ 'absent' if r.status == 'Absent' else '' }}">
+      <td>{{ r.work_day.strftime('%a, %b %d') }}</td>
+      <td>{{ r.full_name }}</td>
+      <td>{% if r.shift_type == 'Overtime' %}<span class="badge ot">Overtime</span>{% else %}Regular{% endif %}</td>
+      <td>{{ r.time_in.strftime('%I:%M %p') if r.time_in else '' }}</td>
+      <td>{% if r.dtr_id %}{{ r.time_out.strftime('%I:%M %p') if r.time_out else 'On shift' }}{% endif %}</td>
+      <td class="num">{{ '%.2f'|format(r.total_hours) if r.total_hours is not none else '' }}</td>
+      <td><span class="badge {{ 'ok' if r.status == 'Present' else ('dark' if r.status == 'Absent' else 'warn') }}">{{ r.status }}</span></td>
+      <td class="muted small">{{ r.note or '' }}</td>
+      <td class="actions">
+        {% if r.dtr_id and r.shift_type == 'Regular' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_shift', dtr_id=r.dtr_id) }}">Edit</a>
+        {% elif not r.dtr_id and r.status == 'Absent' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.new_shift', user_id=r.user_id, date=r.work_day.isoformat()) }}">Add shift</a>{% endif %}
+      </td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+{% else %}<p class="empty">No attendance in this range.</p>{% endif %}
+{% endblock %}

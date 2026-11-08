@@ -1,0 +1,22 @@
+{% macro thumb(image_id, label, kind='sm') -%}
+  {% if image_id -%}
+    <img class="thumb {{ kind }}" src="{{ url_for('catalog.product_image', image_id=image_id) }}" alt="{{ label }}" loading="lazy">
+  {%- else -%}
+    <span class="thumb {{ kind }} ph" role="img" aria-label="No photo for {{ label }}">{{ (label or '?')[:1]|upper }}</span>
+  {%- endif %}
+{%- endmacro %}
+
+{% macro swatch(name, size='md') -%}
+  <span class="swatch {{ size }}" style="background: {{ name|color_hex }}" title="{{ name }}"></span>
+{%- endmacro %}
+
+{% macro price(card) -%}
+  {% if card.promo %}<s class="muted">{{ card.base_min|peso }}</s> {% endif -%}
+  <strong>{% if card.price_min != card.price_max %}From {% endif %}{{ card.price_min|peso }}</strong>
+{%- endmacro %}
+
+{% macro stock_line(status, stock) -%}
+  {% if status == 'out' %}<span class="stock out">Sold out</span>
+  {%- elif status == 'low' %}<span class="stock low">Only {{ stock }} left</span>
+  {%- else %}<span class="stock in">{{ stock }} in stock</span>{% endif %}
+{%- endmacro %}

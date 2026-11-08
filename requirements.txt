@@ -1,0 +1,4 @@
+Flask>=3.0
+psycopg[binary]>=3.2
+psycopg-pool>=3.2
+python-dotenv>=1.0

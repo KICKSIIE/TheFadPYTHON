@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% from "_macros.html" import thumb, swatch %}
+{% block title %}Photos{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Photos: {{ current.product_name }}{% if current.color %} - {{ current.color }}{% endif %}</h1>
+  <a class="btn btn-quiet" href="{{ url_for('admin_products.edit', product_id=product_id) }}">Back</a>
+</div>
+{% if colors|length > 1 %}
+<div class="tabs" role="tablist" aria-label="Color">
+  {% for c in colors %}<a class="tab {{ 'on' if c.name == current.color else '' }}" href="{{ url_for('admin_products.photos', product_id=c.first_id) }}">{{ swatch(c.name, 'sm') }}{{ c.name }}</a>{% endfor %}
+</div>
+{% endif %}
+<p class="muted">{{ gallery|length }} of 8 photos{% if many_sizes %} &middot; shared by all sizes of this color{% endif %}</p>
+{% if gallery %}
+<div class="photo-grid">
+  {% for g in gallery %}
+  <figure class="photo-item">
+    <a class="zoom" href="{{ photo_urls[loop.index0] }}" data-lightbox-urls='{{ photo_urls|tojson }}'
+       data-lightbox-index="{{ loop.index0 }}" data-lightbox-name="{{ current.product_name }}" title="View full screen">
+      {{ thumb(g.image_id, current.product_name, 'card') }}</a>
+    <figcaption>
+      {% if loop.first %}<span class="badge ok">Cover</span>{% endif %}
+      <div class="photo-actions">
+        {% if not loop.first %}
+        <form method="post" action="{{ url_for('admin_products.cover_photo', product_id=product_id, image_id=g.image_id) }}">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="apply_all" value="1">
+          <button class="btn btn-sm btn-quiet" type="submit">Make cover</button>
+        </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('admin_products.remove_photo', product_id=product_id, image_id=g.image_id) }}"
+              onsubmit="return confirm('Remove this photo?');">
+          <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="apply_all" value="1">
+          <button class="btn btn-sm btn-danger" type="submit">Remove</button>
+        </form>
+      </div>
+    </figcaption>
+  </figure>
+  {% endfor %}
+</div>
+{% else %}
+  <p class="empty">No photos yet. Upload some below.</p>
+{% endif %}
+
+{% if gallery|length < 8 %}
+<h2>Add photos</h2>
+<form class="form wide" method="post" enctype="multipart/form-data" action="{{ url_for('admin_products.upload_photos', product_id=product_id) }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <input type="hidden" name="apply_all" value="1">
+  <label for="photos">Add photos</label>
+  <input id="photos" name="photos" type="file" accept="image/jpeg,image/png,image/webp" multiple required>
+  <div class="form-actions"><button class="btn" type="submit">Upload</button></div>
+</form>
+{% endif %}
+{% endblock %}

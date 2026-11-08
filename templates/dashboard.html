@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="head">
+  <h1>Hello, {{ current_user.first_name }}</h1>
+</div>
+
+{% if s %}
+<div class="stats">
+  <a class="stat" href="{{ url_for('orders.index') }}"><span class="stat-num">{{ s.sales_today|peso }}</span><span class="muted">Sales today, {{ s.orders_today }} order{{ '' if s.orders_today == 1 else 's' }}</span></a>
+  <a class="stat {{ 'alert' if s.pending_deliveries }}" href="{{ url_for('orders.index', status='Pending') }}"><span class="stat-num">{{ s.pending_deliveries }}</span><span class="muted">Open deliveries</span></a>
+  <a class="stat {{ 'alert' if s.low_stock }}" href="{{ url_for('inventory.index', low='1', max=low) }}"><span class="stat-num">{{ s.low_stock }}</span><span class="muted">Low stock ({{ low }} or fewer)</span></a>
+  <a class="stat" href="{{ url_for('promos.index') if current_user.role == 'Cashier' else url_for('admin_promos.index') }}"><span class="stat-num">{{ s.active_promos }}</span><span class="muted">Promos running</span></a>
+  {% if current_user.role == 'Admin' %}
+  <a class="stat" href="{{ url_for('refunds.index') }}"><span class="stat-num">{{ s.refunds_today|peso }}</span><span class="muted">Refunded today</span></a>
+  <a class="stat" href="{{ url_for('attendance.everyone') }}"><span class="stat-num">{{ s.staff_clocked_in }}</span><span class="muted">Staff clocked in</span></a>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="dash-grid">
+  <section class="panel">
+    <h2 class="flush">Sales, last 7 days</h2>
+    <p class="muted small">{{ week_total|peso }} in total</p>
+    {% if bars %}
+    <div class="chart" role="img" aria-label="Daily sales for the last 7 days">
+      {% for b in bars %}
+      <div class="bar-col" title="{{ b.day.strftime('%b %d') }}: {{ b.total|peso }}, {{ b.orders }} orders">
+        <span class="bar-val">{{ b.total|peso if b.total else '' }}</span>
+        <span class="bar" style="height: {{ [b.pct, 3]|max if b.total else 3 }}%"></span>
+        <span class="bar-day">{{ b.day.strftime('%a') }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}<p class="empty">No sales data yet.</p>{% endif %}
+  </section>
+
+  <section class="panel">
+    <h2 class="flush">Best sellers this week</h2>
+    {% if top %}
+    <ol class="top-list">
+      {% for t in top %}<li><span class="top-name">{{ t.product_name }}</span>
+        <span class="muted small">{{ t.units }} sold</span><span class="top-rev">{{ t.revenue|peso }}</span></li>{% endfor %}
+    </ol>
+    {% else %}<p class="empty">No sales in the last 7 days.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

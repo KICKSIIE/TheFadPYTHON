@@ -1,0 +1,18 @@
+{% if rows %}
+<div class="table-wrap"><table class="table">
+  <thead><tr><th>When</th>{% if not product %}<th>Product</th>{% endif %}<th>Type</th><th class="num">Change</th><th class="num">Balance</th><th>By</th><th>Order</th></tr></thead>
+  <tbody>{% for r in rows %}
+    <tr>
+      <td>{{ r.logged_at|dt }}</td>
+      {% if not product %}<td>{{ r.product_name }}</td>{% endif %}
+      <td>{{ r.transaction_type|title }}</td>
+      <td class="num">{{ '+' if r.quantity_changed > 0 }}{{ r.quantity_changed }}</td>
+      <td class="num">{{ r.balance_after }}</td>
+      <td>{{ r.staff_name }}</td>
+      <td>{% if r.sale_id %}<a href="{{ url_for('orders.detail', sale_id=r.sale_id) }}">#{{ r.sale_id }}</a>{% endif %}</td>
+    </tr>{% endfor %}
+  </tbody>
+</table></div>
+{% else %}
+  <p class="empty">No stock movements yet.</p>
+{% endif %}

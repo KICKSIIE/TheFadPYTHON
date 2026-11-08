@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% set public_page = true %}
+{% from "_macros.html" import thumb, swatch, price, stock_line %}
+{% block title %}Shop{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>Fashion You Always Deserve</h1>
+  <p class="muted">Search by name, color or size. To order, message our <a href="{{ store.facebook }}" target="_blank" rel="noopener">official Facebook page</a>.</p>
+</section>
+
+<form class="filters" method="get" action="{{ url_for('catalog.index') }}">
+  <input type="hidden" name="category" value="{{ category or '' }}">
+  <div class="pills" role="group" aria-label="Categories">
+    <a class="pill {{ '' if category else 'on' }}" href="{{ url_for('catalog.index', q=q or None, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">All</a>
+    {% for c in categories %}
+    <a class="pill {{ 'on' if category == c.category_id else '' }}"
+       href="{{ url_for('catalog.index', q=q or None, category=c.category_id, instock='1' if in_stock else None, sort=sort if sort != 'featured' else None) }}">{{ c.category_name }}</a>
+    {% endfor %}
+  </div>
+  <div class="filter-row">
+    <input type="hidden" name="q" value="{{ q }}">
+    <label class="toggle"><input type="checkbox" name="instock" value="1" {{ 'checked' if in_stock }}><span>In stock only</span></label>
+    <label class="check">Sort
+      <select name="sort">{% for key, (label, _) in sorts.items() %}<option value="{{ key }}" {{ 'selected' if sort == key }}>{{ label }}</option>{% endfor %}</select>
+    </label>
+    <noscript><button class="btn btn-sm" type="submit">Apply</button></noscript>
+    {% if filtered %}<a class="btn btn-quiet btn-sm" href="{{ url_for('catalog.index') }}">Clear</a>{% endif %}
+  </div>
+</form>
+
+{% macro card_html(c) %}
+<article class="card">
+  <a class="card-img" href="{{ url_for('catalog.product', product_id=c.first_id) }}" aria-label="{{ c.name }}">
+    {{ thumb(c.image_id, c.name, 'card') }}
+    <span class="card-badges">
+      {% if c.promo %}<span class="badge promo">{{ c.promo.discount_percentage }}% off</span>{% endif %}
+      {% if c.status == 'out' %}<span class="badge dark">Sold out</span>{% endif %}
+    </span>
+  </a>
+  <div class="card-body">
+    <h3><a href="{{ url_for('catalog.product', product_id=c.first_id) }}">{{ c.name }}</a></h3>
+    <p class="card-price">{{ price(c) }}</p>
+    {% if c.colors %}
+    <p class="dots" aria-label="Colors">
+      {% for col in c.colors[:6] %}<a class="dot" href="{{ url_for('catalog.product', product_id=col.first_id, color=col.name) }}"
+        style="background: {{ col.name|color_hex }}" title="{{ col.name }}" aria-label="{{ col.name }}"
+        {% if col.image_id %}data-img="{{ url_for('catalog.product_image', image_id=col.image_id) }}"{% endif %}></a>{% endfor %}
+      {% if c.color_count > 6 %}<span class="muted small">+{{ c.color_count - 6 }}</span>{% endif %}
+    </p>
+    {% endif %}
+    <p class="card-stock">{{ stock_line(c.status, c.stock) }}
+      {% if c.sizes %}<span class="muted small"> · {{ c.sizes|map(attribute='size')|join(', ') }}</span>{% endif %}</p>
+  </div>
+</article>
+{% endmacro %}
+
+{% if filtered %}
+  <p class="results muted">{{ cards|length }} product{{ '' if cards|length == 1 else 's' }}{% if q %} for “{{ q }}”{% endif %}</p>
+  {% if cards %}
+  <div class="cards">{% for c in cards %}{{ card_html(c) }}{% endfor %}</div>
+  {% else %}
+  <p class="empty">Nothing matches that search. Try fewer words, another color, or clear the filters.</p>
+  {% endif %}
+{% else %}
+  {% for sec in sections %}
+  <h2 class="section-title">{{ sec.name }}</h2>
+  <div class="cards">{% for c in sec.cards %}{{ card_html(c) }}{% endfor %}</div>
+  {% else %}
+  <p class="empty">No products are listed yet. Check back soon.</p>
+  {% endfor %}
+{% endif %}
+{% endblock %}

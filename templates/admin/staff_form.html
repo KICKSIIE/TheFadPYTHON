@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}{{ 'Edit staff' if editing else 'Add staff' }}{% endblock %}
+{% block content %}
+<h1>{{ 'Edit staff' if editing else 'Add staff' }}</h1>
+<div class="stitch"></div>
+<form class="form" method="post"
+      action="{{ url_for('admin_staff.edit', user_id=user_id) if editing else url_for('admin_staff.new') }}">
+  <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
+  <label for="username">Username</label>
+  <input id="username" name="username" value="{{ person.username or '' }}" {{ 'readonly' if editing else 'required' }} autocomplete="off">
+  {% if not editing %}
+  <label for="password">Temporary password</label>
+  <input id="password" name="password" type="password" minlength="8" autocomplete="new-password" placeholder="8 or more characters" required>
+  {% endif %}
+  <label for="first_name">First name</label>
+  <input id="first_name" name="first_name" value="{{ person.first_name or '' }}" maxlength="50" required>
+  <label for="last_name">Last name</label>
+  <input id="last_name" name="last_name" value="{{ person.last_name or '' }}" maxlength="50" required>
+  <label for="email">Email</label>
+  <input id="email" name="email" type="email" value="{{ person.email or '' }}" required>
+  <label for="user_type">Role</label>
+  <select id="user_type" name="user_type">
+    <option value="CA" {{ 'selected' if person.user_type == 'CA' }}>Cashier</option>
+    <option value="AD" {{ 'selected' if person.user_type == 'AD' }}>Admin</option>
+  </select>
+  <label for="station">Station</label>
+  <input id="station" name="station" value="{{ person.station or '' }}" maxlength="50" placeholder="Optional">
+  <label for="hired_on">Start date</label>
+  <input id="hired_on" name="hired_on" type="date" value="{{ person.hired_on.isoformat() if person.hired_on and person.hired_on.isoformat else (person.hired_on or '') }}">
+  <div class="form-actions">
+    <button class="btn" type="submit">{{ 'Save changes' if editing else 'Create account' }}</button>
+    <a class="btn btn-quiet" href="{{ url_for('admin_staff.index') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
