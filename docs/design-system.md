@@ -85,7 +85,13 @@ Buttons and styled links retain their existing actions. Account & security is a 
 
 <!-- coderabbit-ai-generated-section:v1:48a3849944fe7b8f795cbdc9b2cc1208fb771a81e48a350032ee3d4aae366bf1 -->
 
-Centered standalone forms use `max-width: 760 px`. Product and promo editors use a centered 1240 px grid with a form and live preview. Fields use a responsive grid with gap `17 / 22 px`.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:ef29d44289dd9c92c5aca4b5c0586f0af6f17d7763b5bc4a388c8d9c4745765f -->
+
+Centered standalone forms use `max-width: 760 px`. Product and promo editors use a centered 1240 px grid. Product editing has a live preview; promo editing has a product coverage panel. Fields use a responsive grid with gap `17 / 22 px`.
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 <!-- /coderabbit-ai-generated:v1 -->
 Full-width fields span both columns. Labels sit above the input, 14/600. No helper paragraph unless the
@@ -100,40 +106,17 @@ field is genuinely ambiguous.
 | 3 | Role | Station (optional) |
 | 4 | Start date | Temporary password (new account only) |
 
-### Admin approval section (flat)
+<!-- coderabbit-ai-generated:v1 -->
 
-Never a nested card. A 1 px top rule, 16 px above the actions, then:
+<!-- coderabbit-ai-generated-section:v1:abbb0dea7dab08afc9413399557fd992bf95d23566d06113a7265c514fc90284 -->
 
-```
-────────────── 1px #e6e8ec ──────────────
-ADMIN APPROVAL            (11px uppercase muted)
-[ Approval PIN              ]   Show
-[ 6–12 digits · max 200px   ]
-```
+### Admin approval modal
 
-- PIN input: `max-width: 200 px`, numeric, masked, with a **Show / Hide** text toggle.
-- Cashier stock screens add an "Approving admin" text field beside it.
-- Inside table rows only, the section collapses to one inline line: `Approval PIN [ 108px ]` (no heading).
+Management forms open an approval dialog after the required fields are complete. The dialog names the action, collects a masked 6–12 digit approval PIN and offers Cancel and Confirm. Cashier stock changes also request the approving admin username. Photo actions use action-specific wording and remove actions use the danger button. Cancelling closes the dialog without submitting. The existing confirmation dialogs continue to collect approval for destructive table actions. Server-side PIN and role verification remain required.
 
-### Confirmation modal
 
-Width 440 px (max 92 vw), radius 16, backdrop `rgba(16,19,25,.45)`.
 
-```
-Delete promo
-Delete "Weekend Deal"? This cannot be undone.
-
-Approval PIN
-[ •••••• ]  Show
-
-                         [ Cancel ]  [ Delete ]
-```
-
-- Opened by any destructive action button.
-- Confirm button is solid red for destructive actions, black for neutral ones.
-- Escape / backdrop / Cancel close it; focus starts in the PIN field.
-
-### Tables
+<!-- /coderabbit-ai-generated:v1 -->### Tables
 
 - Card wrapper, 14 px radius, 1 px border, header row light grey.
 - Header cells: 12 uppercase muted. Numeric cells right-aligned, tabular figures.
@@ -210,8 +193,13 @@ then the action button. Back button in the header.
 
 <!-- /coderabbit-ai-generated:v1 -->
 - `End now` and `Delete` open the confirmation modal with the PIN.
-- Create/Edit promo: two-column form (Promo name | Discount %, Starts | Ends, Apply to | Product), then
-  Save / Cancel. The product picker only appears when "One product" is chosen.
+<!-- coderabbit-ai-generated:v1 -->
+
+<!-- coderabbit-ai-generated-section:v1:92c3e84746ef1f37939f45da7d7307ae9f633e799fc8a029fcea9acd22004f88 -->
+
+- Create/Edit promo: details form beside a product coverage panel. Creation sends the selected coverage with the new promo; active promos have a separate Apply promo action. The product picker appears for "One product".
+
+<!-- /coderabbit-ai-generated:v1 -->
 
 ### Staff
 | Name | Username | Role | Station | Since | Status | Actions |

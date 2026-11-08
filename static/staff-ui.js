@@ -120,15 +120,13 @@
   }
   const promo = document.getElementById('promo-editor');
   if (promo) {
-    function update() {
-      const values = promo.elements;
-      document.getElementById('promo-preview-name').textContent = values.discount_name.value.trim() || 'Your next promotion';
-      document.getElementById('promo-preview-rate').textContent = `${values.discount_percentage.value || '0'}%`;
-      document.getElementById('promo-preview-dates').textContent = `${values.start_date.value || 'Start date'} → ${values.end_date.value || 'End date'}`;
-      values.end_date.min = values.start_date.value;
-      const scope = values.scope;
-      if (scope) document.getElementById('promo-preview-scope').textContent = scope.selectedOptions[0].textContent;
-    }
-    promo.addEventListener('input', update); update();
+    const dates = () => { promo.elements.end_date.min = promo.elements.start_date.value; };
+    promo.addEventListener('input', dates); dates();
   }
+  document.querySelectorAll('[data-promo-scope]').forEach(scope => {
+    const product = scope.closest('.promo-products-panel').querySelector('.promo-product-field');
+    const sync = () => { product.hidden = scope.value !== 'PRODUCT'; };
+    scope.addEventListener('change', sync); sync();
+  });
+
 })();

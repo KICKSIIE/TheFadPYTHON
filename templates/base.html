@@ -107,7 +107,7 @@
   <div class="wrap foot-base">{{ store.name }} &middot; {{ store.tagline }}</div>
 </footer>
 {% endif %}
-{% if staff_layout %}{% include "_approval_modal.html" %}{% endif %}
+{% if staff_layout %}{% include "_approval_modal.html" %}{% include "_form_approval_modal.html" %}{% endif %}
 <script src="{{ url_for('static', filename='lightbox.js') }}" defer></script>
 <script src="{{ url_for('static', filename='shop.js') }}" defer></script>
 <script src="{{ url_for('static', filename='approval.js') }}" defer></script>

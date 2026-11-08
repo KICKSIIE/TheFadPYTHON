@@ -104,3 +104,16 @@ def test_search_suggestions_are_public_and_bounded(client):
 def test_audit_page_is_available_for_admin_only(client):
     login(client,'dev_cashier')
     assert client.get('/admin/audit/').status_code == 403
+
+
+def test_photo_actions_require_a_valid_admin_pin(client):
+    import io
+    from tests.test_smoke import PNG
+    login(client, 'dev_admin')
+    csrf = token(client, '/admin/products/1/photos')
+    for route in ('/admin/products/1/photos/5/cover', '/admin/products/1/photos/4/remove'):
+        assert client.post(route, data={'_csrf': csrf, 'apply_all': '1'}).status_code == 403
+        assert client.post(route, data={'_csrf': csrf, 'approval_pin': '000000', 'apply_all': '1'}).status_code == 403
+    response = client.post('/admin/products/1/photos/upload', data={'_csrf': csrf, 'photos': (io.BytesIO(PNG), 'x.png')}, content_type='multipart/form-data')
+    assert response.status_code == 403
+    assert not CALLS
