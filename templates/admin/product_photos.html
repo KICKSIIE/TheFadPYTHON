@@ -4,11 +4,11 @@
 {% block content %}
 <div class="head">
   <h1>Photos: {{ current.product_name }}{% if current.color %} - {{ current.color }}{% endif %}</h1>
-  <a class="btn btn-quiet" href="{{ url_for('admin_products.edit', product_id=product_id) }}">Back</a>
+  <a class="btn btn-quiet" href="{{ url_for('admin_products.edit', {product_id: product_id}) }}">Back</a>
 </div>
 {% if colors|length > 1 %}
 <div class="tabs" role="tablist" aria-label="Color">
-  {% for c in colors %}<a class="tab {{ 'on' if c.name == current.color else '' }}" href="{{ url_for('admin_products.photos', product_id=c.first_id) }}">{{ swatch(c.name, 'sm') }}{{ c.name }}</a>{% endfor %}
+  {% for c in colors %}<a class="tab {{ 'on' if c.name == current.color else '' }}" href="{{ url_for('admin_products.photos', {product_id: c.first_id}) }}">{{ swatch(c.name, 'sm') }}{{ c.name }}</a>{% endfor %}
 </div>
 {% endif %}
 <p class="muted">{{ gallery|length }} of 8 photos{% if many_sizes %} &middot; shared by all sizes of this color{% endif %}</p>
@@ -23,13 +23,13 @@
       {% if loop.first %}<span class="badge ok">Cover</span>{% endif %}
       <div class="photo-actions">
         {% if not loop.first %}
-        <form method="post" action="{{ url_for('admin_products.cover_photo', product_id=product_id, image_id=g.image_id) }}"
+        <form method="post" action="{{ url_for('admin_products.cover_photo', {product_id: product_id, image_id: g.image_id}) }}"
               data-approval-title="Set cover photo" data-approval-message="Make this the cover photo for this color?" data-approval-label="Set cover">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="apply_all" value="1">
           <button class="btn btn-sm btn-quiet" type="submit">Make cover</button>
         </form>
         {% endif %}
-        <form method="post" action="{{ url_for('admin_products.remove_photo', product_id=product_id, image_id=g.image_id) }}"
+        <form method="post" action="{{ url_for('admin_products.remove_photo', {product_id: product_id, image_id: g.image_id}) }}"
               data-approval-title="Remove photo" data-approval-message="Remove this photo from this color?" data-approval-label="Remove photo" data-approval-danger="1">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="apply_all" value="1">
           <button class="btn btn-sm btn-danger" type="submit">Remove</button>
@@ -45,7 +45,7 @@
 
 {% if gallery|length < 8 %}
 <h2>Add photos</h2>
-<form class="form wide" method="post" enctype="multipart/form-data" action="{{ url_for('admin_products.upload_photos', product_id=product_id) }}"
+<form class="form wide" method="post" enctype="multipart/form-data" action="{{ url_for('admin_products.upload_photos', {product_id: product_id}) }}"
       data-approval-title="Upload photos" data-approval-message="Approve uploading the selected photos." data-approval-label="Upload photos">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <input type="hidden" name="apply_all" value="1">

@@ -7,8 +7,8 @@
 </div>
 <p><strong>{{ product.current_stock }}</strong> in stock</p>
 <div class="forms-row">
-  {% for action, title, button in [('in', 'Stock in', 'Add'), ('out', 'Stock out', 'Remove'), ('adjust', 'Stock count', 'Set')] %}
-  <form class="form" method="post" action="{{ url_for('inventory.move', product_id=product.product_id) }}">
+  {% for action, title, button in [['in', 'Stock in', 'Add'], ['out', 'Stock out', 'Remove'], ['adjust', 'Stock count', 'Set']] %}
+  <form class="form" method="post" action="{{ url_for('inventory.move', {product_id: product.product_id}) }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <input type="hidden" name="action" value="{{ action }}">
     <h2 class="flush">{{ title }}</h2>

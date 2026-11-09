@@ -1,8 +1,8 @@
 {% macro thumb(image_id, label, kind='sm') -%}
   {% if image_id -%}
-    <img class="thumb {{ kind }}" src="{{ url_for('catalog.product_image', image_id=image_id) }}" alt="{{ label }}" loading="lazy">
+    <img class="thumb {{ kind }}" src="{{ url_for('catalog.product_image', {image_id: image_id}) }}" alt="{{ label }}" loading="lazy">
   {%- else -%}
-    <span class="thumb {{ kind }} ph" role="img" aria-label="No photo for {{ label }}">{{ (label or '?')[:1]|upper }}</span>
+    <span class="thumb {{ kind }} ph" role="img" aria-label="No photo for {{ label }}">{{ (label or '?')|first|upper }}</span>
   {%- endif %}
 {%- endmacro %}
 

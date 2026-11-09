@@ -1,130 +1,120 @@
-# The Fad - web app starter
+# The Fad — web app (Node.js + PostgreSQL)
 
-<!-- coderabbit-ai-generated:v1 -->
+Shop, point of sale and staff system for The Fad.
 
-<!-- coderabbit-ai-generated-section:v1:99dc06db253d7b42055d55077033fd641e56734323fd18e97808d9d82348bef4 -->
+**Stack:** HTML · CSS · JavaScript · Node.js (Express) · PostgreSQL.
+Templates use Nunjucks (Jinja-style syntax) and are rendered on the server, so every page still works
+without a front-end build step.
 
-Flask + PostgreSQL. Most modules use stored routines; attendance rules run in Flask and use existing database tables (see `attendance_store.py`).
-
-<!-- /coderabbit-ai-generated:v1 -->
+---
 
 ## 1. Database
+
 1. Restore your backup into a database named `THEFAD` (or use the one you already have).
-2. In pgAdmin's Query Tool, run these in order:
-   easiest: paste `sql/setup_all.sql` and press F5 (runs 00 to 04 as one transaction), then run `sql/check_setup.sql`; every row should say OK.
+2. In pgAdmin's Query Tool (or `psql`), run `sql/setup_all.sql` once, then `sql/check_setup.sql` — every
+   row should say `OK`.
+
+Connection details come from `.env`:
+
+```
+DATABASE_URL=postgresql://postgres:1234@localhost:5432/THEFAD
+SECRET_KEY=change-this-to-a-long-random-string
+MFA_ENABLED=false
+```
 
 ## 2. Run the app (Windows)
-```
-py -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
-copy .env.example .env      (then edit DATABASE_URL and SECRET_KEY)
-flask --app app run --debug
-```
-Or simply `python run.py` (it also refuses to start, with a clear message, if the project folder is out of date).
-Open http://127.0.0.1:5000 and check http://127.0.0.1:5000/health (should say `database: ok`).
-Sign in with `dev_admin / Admin@1234` or `dev_cashier / Cashier@1234`.
-To click around without clocking in (prototyping only), run `python prototype\run_prototype.py` and open http://127.0.0.1:5001/staff. It is the same app and database with the shift gate switched off; see `prototype/README.md`.
 
-## 3. Add your screen
-Each module has its own file in `modules/`. Replace the placeholder:
-```python
-import db
-rows = db.call_function("fn_view_discounts", "Active")
-result = db.call_procedure("sp_create_discount", name, pct, start, end, "NONE", None, None)
+```powershell
+npm install
+node run.js          # or: npm start
 ```
-Catch `db.DbError` and `flash(str(e), "error")` to show the database's own error message.
+
+Open <http://127.0.0.1:5000> and check <http://127.0.0.1:5000/health> (should say `database: ok`).
+
+Sign in with `dev_admin / Admin@1234` or `dev_cashier / Cashier@1234`.
+Admins confirm management changes with the approval PIN `123456` (set in Account & security).
+
+### Navigation copy for prototyping
+
+```powershell
+node prototype/run_prototype.js     # or: npm run prototype
+```
+
+Same app and database on <http://127.0.0.1:5001>, with the shift gate switched off so every page opens.
+A yellow banner marks it. See `prototype/README.md`.
+
+## 3. Project layout
+
+| Path | Purpose |
+|---|---|
+| `app.js` | Express app: sessions, CSRF, approval middleware, routes, error pages |
+| `run.js` | Entry point (starts the server and the attendance sweeper) |
+| `config.js` | Environment, shop settings, store details |
+| `db.js` | The only database layer: `callFunction`, `callFunctionOne`, `callProcedure`, `withClient` |
+| `render.js` | Template context (user, menu, store, flashes) |
+| `approval.js` | Management POSTs require a valid admin approval PIN |
+| `csrf.js` | Session-bound CSRF token |
+| `attendance_store.js` | Attendance rules in the application (no attendance DB routines needed) |
+| `sweeper.js` | Closes forgotten shifts every 30 seconds |
+| `menu.js` | Sidebar per role |
+| `modules/` | One file per screen group (catalog, pos, orders, inventory, attendance, admin, …) |
+| `templates/` | Nunjucks views (same markup as before) |
+| `static/` | CSS, JS and logos, served from `/static` |
+| `sql/` | Schema, routines, migrations and the setup check |
+| `tests/` | Node test suite and the routine cross-check |
+| `docs/` | Design spec for Figma and troubleshooting notes |
+| `legacy-python/` | The previous Flask implementation, kept for reference |
+
+## 4. Stored routines
+
+Most screens call PostgreSQL functions and procedures (`sql/*.sql`). All access goes through `db.js`, so no
+module talks to the driver directly:
+
+```js
+const rows = await db.callFunction('fn_list_discounts');
+const product = await db.callFunctionOne('fn_get_product', 30);
+const result = await db.callProcedure('sp_create_sale', userId, 'Walk-in', 'Cash', '', '', '', itemsJson, null);
+```
+
+Catch `db.DbError` and flash `error.message` — the database's own message is safe to show.
 Add `{{ csrf_token() }}` as a hidden `_csrf` field in every POST form.
 
-<!-- coderabbit-ai-generated:v1 -->
+Attendance is different: `attendance_store.js` reads and writes the existing `users`,
+`daily_time_record` and `overtime_permit` tables in one transaction, so no attendance routine or trigger
+is installed.
 
-<!-- coderabbit-ai-generated-section:v1:97728e38f29712fd2ff3c69ca95ec1861fba3f1dc13a87f2369f75da03fcd8a1 -->
+## 5. Attendance, approvals and overtime
 
-## Attendance, approvals and overtime
-<!-- coderabbit-ai-generated:v1 -->
+- Every role lands on **Attendance** after sign-in. Until a shift is running (clocked in, or approved
+  overtime) only Attendance opens; the other pages redirect back to it.
+- The regular schedule is Monday–Saturday in Asia/Manila. Clock in once during the scheduled window; late
+  arrivals keep the same closing time. Actual time in is recorded for punctuality.
+- Forgotten clock-outs close automatically at the scheduled end. The server sweeps every 30 seconds, and
+  protected requests close expired shifts before authorising access.
+- Admins approve overtime; a running window can only be extended before it ends, with a reason.
+- Admins set their own 6–12 digit approval PIN in Account & security. Management changes require that PIN;
+  cashier stock changes require an admin username and PIN. Wrong PINs are rejected without locking the PIN.
+- Cashiers do not see Account & security, Products, Staff, Refunds or the audit log.
+- The audit log records actor, approving admin and the changed fields; credentials and photo data never appear.
 
-<!-- coderabbit-ai-generated-section:v1:ae0dee16de6ccfb22951b1f64d3ffb3ea89607ea04bc663a8f5b86cf9722547d -->
+## 6. Shop and location
 
-<!-- coderabbit-ai-generated:v1 -->
+The storefront is public: search, category pills, in-stock filter, sorting, product pages with a gallery,
+and a footer with the map. Store configuration lives in `config.js`.
 
-<!-- coderabbit-ai-generated-section:v1:d1179da30df3edf496ba34e7d1b70f41b9146f24d71404a17e70c58cd5392c16 -->
+## 7. Checks
 
-- All staff, including admins, land on Attendance after sign-in. Flask checks existing attendance and user tables on protected requests; it does not require `fn_staff_access` or database attendance triggers. It denies access when attendance cannot be verified. Any database triggers installed previously remain in place until separately removed by the database owner.
+```powershell
+npm test          # node --test tests/ : renders every page, CSRF and approval are enforced
+npm run check     # every routine called from JavaScript exists in sql/ with matching arguments
+```
 
-<!-- /coderabbit-ai-generated:v1 -->
+## 8. Demo data
 
-<!-- /coderabbit-ai-generated:v1 -->
-- The regular schedule is Monday–Saturday in Asia/Manila. Clock in once during the scheduled window; late arrivals retain the same closing time. Actual time in is recorded for punctuality and attendance.
-<!-- coderabbit-ai-generated:v1 -->
+The demo database is already seeded (products, staff, attendance, orders, refunds). The original seeding
+script is `legacy-python/seed_demo.py` and still runs with Python 3 if you need to rebuild it.
 
-<!-- coderabbit-ai-generated-section:v1:7fc885763fd1d10af4cb2794e7b232764a8fd5f02b15cb9f6a768b0f6fadd41f -->
+## 9. Who owns what
 
-- When the database has a `scheduled_end` column, clock-in snapshots the end. On older schemas without that column, schedule edits are blocked while a regular shift is open. Regular time is never extended by arriving late.
-
-<!-- /coderabbit-ai-generated:v1 -->
-- Admins authorize a separate overtime window. It cannot overlap regular hours. Once started, its end can only be extended before expiry, with a reason and admin approval. Closed records remain fixed.
-- Forgotten clock-outs close at the recorded regular/overtime end. Run the worker alongside the web app, including when nobody is browsing:
-  ```sh
-  flask --app app close-shifts
-  ```
-  It sweeps every 30 seconds and writes the exact scheduled timestamp. Protected requests also sweep before authorizing access. Restart the worker after a process restart.
-- A forgotten clock-in creates no paid time. Admins correct attendance through Everyone > Add shift / Edit with a reason. Existing historical completed records are retained.
-- Admins set their own 6–12 digit approval PIN in Account & security using their current password. That page and the PIN approval exist for admins only; cashiers do not see it. Management changes require approval; cashier stock changes require an admin username and PIN. Wrong PINs are simply rejected, with no lockout. PINs are hashed; password verification allows replacement. The routines behind it are in `sql/07_security_populate.sql` (a subset of `05`, for databases that already have the attendance part of 05). In this development database the seeded admins `dev_admin` and `ana.reyes` use PIN `123456`.
-- Payroll was removed by team decision: there is no payroll page, no hourly rate in the staff screens and no pay figures anywhere in the app. The optional `fn_payroll` database routine may still exist for coursework but nothing calls it.
-- Apply `sql/setup_all.sql` to an original restored database, or apply 05 and 06 to an already-updated database; also update the revised sale routine in 04. Migration 06 supplies routines previously only expected in the external backup. Their old implementations were unavailable, so confirm compatibility against your original backup before deployment.
-- Audit log is now a searchable admin page backed by database triggers. It records the actor, the approving admin, the record type and what happened, in readable words; the before/after payloads stay in the database and are never shown. Credentials and binary photos are excluded. Audit history rejects UPDATE, DELETE and TRUNCATE. Direct database owners can still change database objects; deploy with restricted database credentials.
-
-
-
-<!-- /coderabbit-ai-generated:v1 --><!-- coderabbit-ai-generated:v1 -->
-
-<!-- coderabbit-ai-generated-section:v1:80eb091fe70ad3fd5dfc9bd6fbacaf6b53010787fb2bfcd127010f5aec060723 -->
-
-## Shop and location
-The header search is centered with keyboard-accessible product suggestions. Categories sit centered above the products so the grid can use the full page width. Search retains the current filters.
-The footer uses the supplied [shop location](https://maps.app.goo.gl/fEHAhXsQ6s6VsaWe8), pinned at 10.3100695, 123.9493883, with coordinate-based directions. Store configuration is in `config.py`.
-
-
-
-<!-- /coderabbit-ai-generated:v1 -->## Demo data (optional, development database only)
-After `setup_all.sql`: `python seed_demo.py`. Adds 12 products with colors, sizes and drawn placeholder photos, stock,
-promos, staff, two weeks of attendance (late, absences, allowed overtime), about 35 orders and a refund.
-Already seeded an earlier version? `python seed_demo.py --attendance` adds only the attendance and start dates.
-Replace the placeholder photos under Products > Manage photos. Staff logins it creates use `Cashier@1234`.
-
-## What works now
-- **Shop (public):** search, category pills, in-stock toggle, sort; color dots, stock, gallery, full-screen photos.
-- **Products:** colors and sizes, each with its own stock and photo gallery.
-- **Staff area:** New sale (cart, delivery, receipts), Orders, Inventory (you set what "low" means), Products,
-  Promos, Attendance, Staff, Refunds. Menu grouped into Sell, Stock, Team and Admin.
-- **Dashboard:** today's numbers, 7-day chart and best sellers.
-
-## Checks
-`python tests/check_routines.py` confirms every routine the Python code calls exists in `sql/` with the right
-number of arguments. `pytest` runs the app tests.
-
-<!-- coderabbit-ai-generated:v1 -->
-
-<!-- coderabbit-ai-generated-section:v1:8fb1747bccfeeaf89eb65112a8d9480ad47b0256c4a716673010fb500d979287 -->
-
-## Remaining scope
-OTP login, database roles and RLS are still unfinished. The CRUD coverage report supplied with this task lists missing staff profile/password features, inventory ledger corrections/deletions, attendance deletion and standalone sale-item reports. Audit has a working admin page; payroll was removed.
-
-
-
-<!-- /coderabbit-ai-generated:v1 -->## Who owns what
 catalog (shop), admin_products: Batiola | auth, dashboard, attendance, admin_staff: Decembrano
 promos, admin_promos, refunds, audit: Po | pos, orders: Pono | inventory: Rivera
-
-## Later phases (hooks already in place)
-- `db._prepare()`: SET LOCAL ROLE and `app.current_shift` (phase 2)
-- `MFA_ENABLED=true` + `auth/routes.py verify_otp` (phase 2)
-<!-- coderabbit-ai-generated:v1 -->
-
-<!-- coderabbit-ai-generated-section:v1:8d07fa3d0814bc922042ba5f25ef7967c971e6e1d6651b369f25f8531d26f09d -->
-
-- `modules/audit.py`: readable audit viewer (no before/after payloads on screen).
-
-<!-- /coderabbit-ai-generated:v1 -->
-
-Run tests: `pip install pytest` then `pytest`

@@ -3,11 +3,11 @@
 {% block content %}
 <div class="head"><div><span class="eyebrow">Promotion</span><h1>{{ promo.discount_name }}</h1></div><div>
 <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">All promos</a>
-<a class="btn" href="{{ url_for('admin_promos.edit', discount_id=promo.discount_id) }}">Edit promo</a>
+<a class="btn" href="{{ url_for('admin_promos.edit', {discount_id: promo.discount_id}) }}">Edit promo</a>
 </div></div>
 <div class="promo-detail">
 <section class="panel"><div class="panel-heading"><h2>Campaign overview</h2><span class="badge {{ 'ok' if promo.status == 'Active' else 'warn' }}">{{ promo.status }}</span></div>
-<dl class="summary-list"><div><dt>Promo ID</dt><dd>{{ promo.discount_id }}</dd></div><div><dt>Discount</dt><dd>{{ promo.discount_percentage }}% off</dd></div><div><dt>Starts</dt><dd>{{ promo.start_date.strftime('%b %d, %Y') }}</dd></div><div><dt>Ends</dt><dd>{{ promo.end_date.strftime('%b %d, %Y') }}</dd></div><div><dt>Coverage</dt><dd>{{ linked|length }} product{{ '' if linked|length == 1 else 's' }} · {{ linked|sum(attribute='variants') }} variants</dd></div></dl></section>
+<dl class="summary-list"><div><dt>Promo ID</dt><dd>{{ promo.discount_id }}</dd></div><div><dt>Discount</dt><dd>{{ promo.discount_percentage }}% off</dd></div><div><dt>Starts</dt><dd>{{ promo.start_date.strftime('%b %d, %Y') }}</dd></div><div><dt>Ends</dt><dd>{{ promo.end_date.strftime('%b %d, %Y') }}</dd></div><div><dt>Coverage</dt><dd>{{ linked|length }} product{{ '' if linked|length == 1 else 's' }} · {{ linked|sum('variants') }} variants</dd></div></dl></section>
 <h2>Included products</h2>
 {% if linked %}<div class="table-wrap"><table class="table"><thead><tr><th>Product</th><th class="num">Product ID</th><th class="num">Variants</th><th class="num">Regular price</th><th class="num">Current price</th></tr></thead><tbody>{% for p in linked %}<tr><td>{{ p.name }}</td><td class="num id-cell">{{ p.product_id }}</td><td class="num">{{ p.variants }}</td><td class="num">{{ p.base|peso }}</td><td class="num">{{ p.promo|peso }}</td></tr>{% endfor %}</tbody></table></div>
 {% else %}<p class="empty">No products are linked. Edit the promo to manage its products.</p>{% endif %}

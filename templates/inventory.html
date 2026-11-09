@@ -27,7 +27,7 @@
       <td class="num id-cell">{{ i.product_id }}</td>
       <td>{{ i.category_name }}</td>
       <td class="num">{{ i.current_stock }}{% if i.current_stock == 0 %} <span class="badge warn">Out</span>{% elif i.is_low %} <span class="badge warn">Low</span>{% endif %}</td>
-      <td class="actions"><a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', product_id=i.product_id) }}">Manage</a></td>
+      <td class="actions"><a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', {product_id: i.product_id}) }}">Manage</a></td>
     </tr>
   {% endfor %}
   </tbody>

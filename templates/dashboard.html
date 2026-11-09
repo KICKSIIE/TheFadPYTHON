@@ -8,8 +8,8 @@
 {% if s %}
 <div class="stats">
   <a class="stat" href="{{ url_for('orders.index') }}"><span class="stat-num">{{ s.sales_today|peso }}</span><span class="muted">Sales today, {{ s.orders_today }} order{{ '' if s.orders_today == 1 else 's' }}</span></a>
-  <a class="stat {{ 'alert' if s.pending_deliveries }}" href="{{ url_for('orders.index', status='Pending') }}"><span class="stat-num">{{ s.pending_deliveries }}</span><span class="muted">Open deliveries</span></a>
-  <a class="stat {{ 'alert' if s.low_stock }}" href="{{ url_for('inventory.index', low='1', max=low) }}"><span class="stat-num">{{ s.low_stock }}</span><span class="muted">Low stock ({{ low }} or fewer)</span></a>
+  <a class="stat {{ 'alert' if s.pending_deliveries }}" href="{{ url_for('orders.index', {status: 'Pending'}) }}"><span class="stat-num">{{ s.pending_deliveries }}</span><span class="muted">Open deliveries</span></a>
+  <a class="stat {{ 'alert' if s.low_stock }}" href="{{ url_for('inventory.index', {low: '1', max: low}) }}"><span class="stat-num">{{ s.low_stock }}</span><span class="muted">Low stock ({{ low }} or fewer)</span></a>
   <a class="stat" href="{{ url_for('promos.index') if current_user.role == 'Cashier' else url_for('admin_promos.index') }}"><span class="stat-num">{{ s.active_promos }}</span><span class="muted">Promos running</span></a>
   {% if current_user.role == 'Admin' %}
   <a class="stat" href="{{ url_for('refunds.index') }}"><span class="stat-num">{{ s.refunds_today|peso }}</span><span class="muted">Refunded today</span></a>

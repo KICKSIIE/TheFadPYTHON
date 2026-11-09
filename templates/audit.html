@@ -8,11 +8,11 @@
   <input name="actor" value="{{ filters.actor }}" placeholder="Staff username" aria-label="Staff username">
   <select name="entity" aria-label="Record">
     <option value="">All records</option>
-    {% for key, label in entities.items() %}<option value="{{ key }}" {{ 'selected' if filters.entity == key }}>{{ label|capitalize }}</option>{% endfor %}
+    {% for key, label in entities %}<option value="{{ key }}" {{ 'selected' if filters.entity == key }}>{{ label|capitalize }}</option>{% endfor %}
   </select>
   <select name="action" aria-label="Action">
     <option value="">All actions</option>
-    {% for key, label in [('INSERT','Created'),('UPDATE','Updated'),('DELETE','Deleted'),('SET_PIN','Set PIN')] %}<option value="{{ key }}" {{ 'selected' if filters.action == key }}>{{ label }}</option>{% endfor %}
+    {% for key, label in [['INSERT','Created'],['UPDATE','Updated'],['DELETE','Deleted'],['SET_PIN','Set PIN']] %}<option value="{{ key }}" {{ 'selected' if filters.action == key }}>{{ label }}</option>{% endfor %}
   </select>
   <button class="btn" type="submit">Filter</button>
   <a class="btn btn-quiet" href="{{ url_for('audit.index') }}">Reset</a>
@@ -21,7 +21,7 @@
   <thead><tr><th>Time</th><th class="num">Event ID</th><th>Staff name</th><th>Role</th><th>Details</th></tr></thead>
   <tbody>{% for r in rows %}
     <tr>
-      <td>{{ r.time|dt }}</td>
+      <td class="date-cell">{{ r.time|dt }}</td>
       <td class="num id-cell">{{ r.audit_id }}</td>
       <td><strong>{{ r.name }}</strong><div class="muted small">{{ r.actor }}</div>{% if r.approved_by %}<div class="muted small">Approved by {{ r.approved_by }}</div>{% endif %}</td>
       <td><span class="badge">{{ r.role }}</span></td>
@@ -36,5 +36,5 @@
     </tr>{% endfor %}
   </tbody>
 </table></div>{% else %}<p class="empty">No changes match these filters.</p>{% endif %}
-<nav class="table-pagination" aria-label="Audit pages">{% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page-1, **filters) }}">Previous</a>{% endif %}<span>Page {{ page }} · {{ rows|length }} events</span>{% if more %}<a class="btn btn-quiet" href="{{ url_for('audit.index', page=page+1, **filters) }}">Next</a>{% endif %}</nav>
+<nav class="table-pagination" aria-label="Audit pages">{% if page > 1 %}<a class="btn btn-quiet" href="{{ url_for('audit.index', {page: page - 1, start: filters.start, end: filters.end, actor: filters.actor, entity: filters.entity, action: filters.action}) }}">Previous</a>{% endif %}<span>Page {{ page }} · {{ rows|length }} events</span>{% if more %}<a class="btn btn-quiet" href="{{ url_for('audit.index', {page: page + 1, start: filters.start, end: filters.end, actor: filters.actor, entity: filters.entity, action: filters.action}) }}">Next</a>{% endif %}</nav>
 {% endblock %}

@@ -12,11 +12,11 @@
 <div class="order-layout">
 <div class="receipt">
   <header class="receipt-head">
-    <img class="receipt-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="{{ store.name }}">
+    <img class="receipt-logo" src="{{ url_for('static', {filename: 'logo-dark.png'}) }}" alt="{{ store.name }}">
     <p class="receipt-brand">{{ store.name }}</p>
     <p class="receipt-tag">{{ store.tagline }}</p>
     <p class="small">{{ store.address }}<br>Plus Code {{ store.plus_code }}</p>
-    <p class="small">Facebook: {{ store.facebook.replace('https://', '').replace('http://', '').rstrip('/') }}</p>
+    <p class="small">Facebook: {{ store.facebook_short }}</p>
   </header>
   <div class="receipt-rule"></div>
   <dl class="receipt-meta">
@@ -55,7 +55,7 @@
   <div class="receipt-rule"></div>
   <footer class="receipt-foot">
     <p class="receipt-thanks">Thank you for shopping with {{ store.name }}.</p>
-    <p class="small">Questions or sizing help? Message us on Facebook: {{ store.facebook.replace('https://', '').replace('http://', '').rstrip('/') }}</p>
+    <p class="small">Questions or sizing help? Message us on Facebook: {{ store.facebook_short }}</p>
     <p class="small">{{ store.address }}</p>
   </footer>
 </div>
@@ -63,10 +63,10 @@
 <aside class="order-sidebar no-print">
 <section class="panel order-summary"><span class="eyebrow">Order overview</span><h2>{{ sale.order_status|label }}</h2><dl class="summary-list"><div><dt>Total</dt><dd>{{ sale.total_amount|peso }}</dd></div><div><dt>Payment</dt><dd>{{ sale.payment_method }}</dd></div><div><dt>Fulfillment</dt><dd>{{ sale.fulfillment_type }}</dd></div><div><dt>Cashier</dt><dd>{{ sale.cashier }}</dd></div></dl></section>
 <section class="panel"><h2>Order actions</h2>
-{% if sale.order_status in ('Pending', 'Out_for_Delivery') %}
+{% if sale.order_status in ['Pending', 'Out_for_Delivery'] %}
   <p class="muted small">Update delivery details and order status.</p>
   {% if sale.order_status == 'Pending' and sale.fulfillment_type == 'Delivery' %}
-  <form class="order-update" method="post" action="{{ url_for('orders.set_status', sale_id=sale.sale_id) }}">
+  <form class="order-update" method="post" action="{{ url_for('orders.set_status', {sale_id: sale.sale_id}) }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <input type="hidden" name="new_status" value="Out_for_Delivery">
     <label for="rider-service">Rider service</label><input id="rider-service" name="rider_service" placeholder="Rider service (e.g. Lalamove)" maxlength="50" required>
@@ -76,19 +76,19 @@
   {% endif %}
   <div class="toolbar">
   {% if sale.order_status == 'Out_for_Delivery' %}
-  <form method="post" action="{{ url_for('orders.set_status', sale_id=sale.sale_id) }}">
+  <form method="post" action="{{ url_for('orders.set_status', {sale_id: sale.sale_id}) }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="new_status" value="Completed">
     <button class="btn" type="submit">Mark delivered</button>
   </form>
   {% endif %}
-  <form method="post" action="{{ url_for('orders.set_status', sale_id=sale.sale_id) }}" onsubmit="return confirm('Cancel this order and return the stock?');">
+  <form method="post" action="{{ url_for('orders.set_status', {sale_id: sale.sale_id}) }}" onsubmit="return confirm('Cancel this order and return the stock?');">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}"><input type="hidden" name="new_status" value="Cancelled">
     <button class="btn btn-quiet" type="submit">Cancel order</button>
   </form>
   </div>
 {% endif %}
-{% if current_user.role == 'Admin' and sale.order_status in ('Completed', 'Partially_Refunded') %}
-  <p><a class="btn btn-quiet" href="{{ url_for('refunds.sale', sale_id=sale.sale_id) }}">Refund items from this order</a></p>
+{% if current_user.role == 'Admin' and sale.order_status in ['Completed', 'Partially_Refunded'] %}
+  <p><a class="btn btn-quiet" href="{{ url_for('refunds.sale', {sale_id: sale.sale_id}) }}">Refund items from this order</a></p>
 {% endif %}
 
 </section></aside></div>

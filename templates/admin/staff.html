@@ -19,10 +19,10 @@
       <td>{{ s.hired_on.strftime('%b %d, %Y') }}</td>
       <td>{% if not s.is_active %}<span class="badge">Inactive</span>{% elif s.clocked_in %}<span class="badge ok">Clocked in</span>{% else %}Off shift{% endif %}</td>
       <td class="actions">
-        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_staff.edit', user_id=s.user_id) }}">Edit</a>
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_staff.edit', {user_id: s.user_id}) }}">Edit</a>
         {% if s.user_id != session.user_id %}
         <button class="btn btn-sm {{ 'btn-danger' if s.is_active else 'btn-quiet' }}" type="button"
-                data-confirm data-action="{{ url_for('admin_staff.set_active', user_id=s.user_id) }}"
+                data-confirm data-action="{{ url_for('admin_staff.set_active', {user_id: s.user_id}) }}"
                 data-title="{{ 'Deactivate account' if s.is_active else 'Reactivate account' }}"
                 data-confirm-label="{{ 'Deactivate' if s.is_active else 'Reactivate' }}"
                 data-danger="{{ '1' if s.is_active else '0' }}"

@@ -11,7 +11,7 @@
 {% else %}
 <div class="editor-layout product-editor">
 <form id="product-editor" class="form wide" method="post" enctype="multipart/form-data"
-      action="{{ url_for('admin_products.edit', product_id=product_id) if editing else url_for('admin_products.new') }}">
+      action="{{ url_for('admin_products.edit', {product_id: product_id}) if editing else url_for('admin_products.new') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <div class="field-grid">
     <div class="field span-2">
@@ -56,7 +56,7 @@
       <div class="field span-2">
         <label>Photos for this color</label>
         <div class="photo-now">{{ thumb(current.image_id, current.product_name, 'md') }}
-          <a class="btn btn-quiet" href="{{ url_for('admin_products.photos', product_id=product_id) }}">Add / manage photos</a>
+          <a class="btn btn-quiet" href="{{ url_for('admin_products.photos', {product_id: product_id}) }}">Add / manage photos</a>
         </div>
       </div>
     {% else %}
@@ -102,10 +102,10 @@
       <td class="num id-cell">{{ v.product_id }}</td>
       <td class="num">{{ v.current_stock }}</td>
       <td><span class="badge {{ 'ok' if v.is_active else '' }}">{{ 'Active' if v.is_active else 'Inactive' }}</span></td>
-      <td class="actions">{% if v.product_id != product_id %}<a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=v.product_id) }}">Edit</a>{% endif %}
-        <a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', product_id=v.product_id) }}">Stock</a>
+      <td class="actions">{% if v.product_id != product_id %}<a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', {product_id: v.product_id}) }}">Edit</a>{% endif %}
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('inventory.item', {product_id: v.product_id}) }}">Stock</a>
         <button class="btn btn-sm {{ 'btn-danger' if v.is_active else 'btn-quiet' }}" type="button"
-                data-confirm data-action="{{ url_for('admin_products.set_active', product_id=v.product_id) }}"
+                data-confirm data-action="{{ url_for('admin_products.set_active', {product_id: v.product_id}) }}"
                 data-title="{{ 'Deactivate this color/size' if v.is_active else 'Reactivate this color/size' }}"
                 data-confirm-label="{{ 'Deactivate' if v.is_active else 'Reactivate' }}"
                 data-danger="{{ '1' if v.is_active else '0' }}"
@@ -115,7 +115,7 @@
   </tbody>
 </table></div>
 <h2>Add a color or size</h2>
-<form class="toolbar" method="post" action="{{ url_for('admin_products.add_variant', product_id=product_id) }}">
+<form class="toolbar" method="post" action="{{ url_for('admin_products.add_variant', {product_id: product_id}) }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <input name="color" placeholder="New color" maxlength="30" aria-label="Color">
   <input name="size" placeholder="New size" maxlength="20" aria-label="Size">

@@ -16,7 +16,7 @@
   </select>
   <button class="btn" type="submit">Show</button>
   <span class="preset-group">
-    {% for label, a, b in presets %}<a class="btn btn-quiet btn-sm" href="{{ url_for('attendance.everyone', start=a.isoformat(), end=b.isoformat(), user_id=user_id) }}">{{ label }}</a>{% endfor %}
+    {% for label, a, b in presets %}<a class="btn btn-quiet btn-sm" href="{{ url_for('attendance.everyone', {start: a.isoformat(), end: b.isoformat(), user_id: user_id}) }}">{{ label }}</a>{% endfor %}
   </span>
 </form>
 
@@ -43,8 +43,8 @@
       <td><span class="badge {{ 'ok' if r.status == 'Present' else ('dark' if r.status == 'Absent' else 'warn') }}">{{ r.status }}</span></td>
       <td class="muted small">{{ r.note or '' }}</td>
       <td class="actions">
-        {% if r.dtr_id and r.shift_type == 'Regular' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_shift', dtr_id=r.dtr_id) }}">Edit</a>
-        {% elif not r.dtr_id and r.status == 'Absent' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.new_shift', user_id=r.user_id, date=r.work_day.isoformat()) }}">Add shift</a>{% endif %}
+        {% if r.dtr_id and r.shift_type == 'Regular' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_shift', {dtr_id: r.dtr_id}) }}">Edit</a>
+        {% elif not r.dtr_id and r.status == 'Absent' %}<a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.new_shift', {user_id: r.user_id, date: r.work_day.isoformat()}) }}">Add shift</a>{% endif %}
       </td>
     </tr>{% endfor %}
   </tbody>

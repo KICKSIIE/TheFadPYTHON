@@ -1,0 +1,26 @@
+{
+  "name": "thefad",
+  "version": "2.0.0",
+  "private": true,
+  "description": "The Fad — shop, POS and staff system (Node.js + Express + PostgreSQL)",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "start": "node run.js",
+    "dev": "node --watch run.js",
+    "prototype": "node prototype/run_prototype.js",
+    "test": "node --test tests/",
+    "check": "node tests/check-routines.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.5.0",
+    "nunjucks": "^3.2.4",
+    "pg": "^8.13.1"
+  }
+}

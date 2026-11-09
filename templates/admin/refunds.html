@@ -14,9 +14,9 @@
 </form>
 {% set total = report|selectattr('refund_method', 'equalto', 'TOTAL')|first %}
 {% set methods = report|rejectattr('refund_method', 'equalto', 'TOTAL')|list %}
-{% set count_sum = methods|sum(attribute='refund_count') %}
-{% set units_sum = methods|sum(attribute='units_refunded') %}
-{% set refunded_sum = methods|sum(attribute='total_refunded') %}
+{% set count_sum = methods|sum('refund_count') %}
+{% set units_sum = methods|sum('units_refunded') %}
+{% set refunded_sum = methods|sum('total_refunded') %}
 {% set count_total = total.refund_count if total else count_sum %}
 {% set units_total = total.units_refunded if total else units_sum %}
 {% set refunded_total = total.total_refunded if total else refunded_sum %}
@@ -41,7 +41,7 @@
 <div class="table-wrap"><table class="table">
   <thead><tr><th>When</th><th class="num">Refund ID</th><th>Order ID</th><th>Item</th><th class="num">Qty</th><th class="num">Amount</th><th>Method</th><th>Reason</th><th>By</th></tr></thead>
   <tbody>{% for r in refunds %}
-    <tr><td class="date-cell">{{ r.refund_date|dt }}</td><td class="num id-cell">{{ r.refund_id }}</td><td><a href="{{ url_for('orders.detail', sale_id=r.sale_id) }}">#{{ r.sale_id }}</a></td><td class="product-cell">{{ r.product_name or '' }}</td>
+    <tr><td class="date-cell">{{ r.refund_date|dt }}</td><td class="num id-cell">{{ r.refund_id }}</td><td><a href="{{ url_for('orders.detail', {sale_id: r.sale_id}) }}">#{{ r.sale_id }}</a></td><td class="product-cell">{{ r.product_name or '' }}</td>
         <td class="num">{{ r.quantity_refunded }}</td><td class="num">{{ r.refund_amount|peso }}</td><td>{{ r.refund_method }}</td><td>{{ r.reason or '' }}</td><td class="name-cell">{{ r.processed_by }}</td></tr>
   {% endfor %}</tbody>
 </table></div>

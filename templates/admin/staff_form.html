@@ -6,7 +6,7 @@
   <a class="btn btn-quiet" href="{{ url_for('admin_staff.index') }}">Back</a>
 </div>
 <form class="form wide" method="post"
-      action="{{ url_for('admin_staff.edit', user_id=user_id) if editing else url_for('admin_staff.new') }}">
+      action="{{ url_for('admin_staff.edit', {user_id: user_id}) if editing else url_for('admin_staff.new') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <div class="field-grid">
     <div class="field">

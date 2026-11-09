@@ -19,10 +19,10 @@
   <thead><tr><th>Order ID</th><th>When</th><th>Type</th><th>Customer</th><th>Cashier</th><th class="num">Items</th><th class="num">Total</th><th>Status</th></tr></thead>
   <tbody>{% for r in rows %}
     <tr>
-      <td><a href="{{ url_for('orders.detail', sale_id=r.sale_id) }}">#{{ r.sale_id }}</a></td>
+      <td><a href="{{ url_for('orders.detail', {sale_id: r.sale_id}) }}">#{{ r.sale_id }}</a></td>
       <td>{{ r.sale_date|dt }}</td><td>{{ r.fulfillment_type }}</td><td>{{ r.customer_name or '' }}</td><td>{{ r.cashier }}</td>
       <td class="num">{{ r.item_count }}</td><td class="num">{{ r.total_amount|peso }}</td>
-      <td><span class="badge {{ 'ok' if r.order_status == 'Completed' else ('warn' if r.order_status in ('Pending','Out_for_Delivery') else '') }}">{{ r.order_status|label }}</span></td>
+      <td><span class="badge {{ 'ok' if r.order_status == 'Completed' else ('warn' if r.order_status in ['Pending','Out_for_Delivery'] else '') }}">{{ r.order_status|label }}</span></td>
     </tr>{% endfor %}
   </tbody>
   <tfoot><tr><td colspan="6">Total (excluding cancelled and refunded)</td><td class="num">{{ total|peso }}</td><td></td></tr></tfoot>

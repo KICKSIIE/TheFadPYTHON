@@ -19,19 +19,19 @@
       <td class="date-cell">{{ r.work_date.strftime('%a, %b %d, %Y') }}</td>
       <td class="num id-cell">{{ r.permit_id }}</td>
       <td class="name-cell">{{ r.full_name }}</td>
-      <td class="time-cell">{{ r.start_time.strftime('%I:%M %p') }}</td>
-      <td class="time-cell">{{ r.end_time.strftime('%I:%M %p') }}</td>
+      <td class="time-cell">{{ r.start_time|time12 }}</td>
+      <td class="time-cell">{{ r.end_time|time12 }}</td>
       <td class="num">{{ r.grace_minutes }} min</td>
-      <td><span class="badge {{ 'ok' if r.status in ('Done', 'In progress') else ('warn' if r.status == 'Allowed' else '') }}">{{ r.status }}</span></td>
+      <td><span class="badge {{ 'ok' if r.status in ['Done', 'In progress'] else ('warn' if r.status == 'Allowed' else '') }}">{{ r.status }}</span></td>
       <td class="num">{{ '%.2f'|format(r.hours_worked) if r.hours_worked is not none else '' }}</td>
       <td class="muted small">{{ r.note or '' }}</td>
       <td class="actions">
-        {% if r.status in ('Allowed', 'In progress') %}
-        <a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_overtime', permit_id=r.permit_id) }}">Edit</a>
+        {% if r.status in ['Allowed', 'In progress'] %}
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('attendance.edit_overtime', {permit_id: r.permit_id}) }}">Edit</a>
         {% endif %}
         {% if r.status == 'Allowed' %}
         <button class="btn btn-sm btn-danger" type="button"
-                data-confirm data-action="{{ url_for('attendance.cancel_overtime', permit_id=r.permit_id) }}"
+                data-confirm data-action="{{ url_for('attendance.cancel_overtime', {permit_id: r.permit_id}) }}"
                 data-title="Cancel overtime" data-confirm-label="Cancel overtime" data-danger="1"
                 data-message="Cancel {{ r.full_name }}'s overtime on {{ r.work_date.strftime('%b %d, %Y') }}?">Cancel</button>
         {% endif %}

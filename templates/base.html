@@ -7,8 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" type="image/png" href="{{ url_for('static', {filename: 'favicon.png'}) }}">
+  <link rel="stylesheet" href="{{ url_for('static', {filename: 'style.css'}) }}">
 </head>
 {% set staff_layout = current_user and not public_page %}
 <body data-role="{{ current_user.role if current_user else '' }}" class="{{ 'staff' if staff_layout else 'public' }}">
@@ -16,7 +16,7 @@
 <div class="shell">
   <aside class="side">
     <div class="side-head">
-      <a class="brand" href="{{ url_for('dashboard.index') }}" aria-label="The Fad, dashboard"><img class="logo" src="{{ url_for('static', filename='logo-light.png') }}" alt="The Fad"></a>
+      <a class="brand" href="{{ url_for('dashboard.index') }}" aria-label="The Fad, dashboard"><img class="logo" src="{{ url_for('static', {filename: 'logo-light.png'}) }}" alt="The Fad"></a>
       <label for="navtoggle" class="nav-btn">Menu</label>
     </div>
     <input type="checkbox" id="navtoggle" class="nav-check" aria-label="Toggle menu">
@@ -50,12 +50,12 @@
 {% else %}
 <header class="site-head">
   <div class="wrap">
-    <a class="brand" href="{{ url_for('catalog.index') }}" aria-label="The Fad, shop home"><img class="logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="The Fad"></a>
+    <a class="brand" href="{{ url_for('catalog.index') }}" aria-label="The Fad, shop home"><img class="logo" src="{{ url_for('static', {filename: 'logo-dark.png'}) }}" alt="The Fad"></a>
     <form class="site-search" action="{{ url_for('catalog.index') }}" method="get" role="search">
-      <input type="hidden" name="category" value="{{ request.args.get('category', '') }}">
-      <input type="hidden" name="instock" value="{{ request.args.get('instock', '') }}">
-      <input type="hidden" name="sort" value="{{ request.args.get('sort', 'featured') }}">
-      <input id="shop-search" type="search" name="q" autocomplete="off" aria-controls="search-suggestions" aria-expanded="false" value="{{ request.args.get('q', '') if request.endpoint == 'catalog.index' else '' }}"
+      <input type="hidden" name="category" value="{{ request.args.category or '' }}">
+      <input type="hidden" name="instock" value="{{ request.args.instock or '' }}">
+      <input type="hidden" name="sort" value="{{ request.args.sort or 'featured' }}">
+      <input id="shop-search" type="search" name="q" autocomplete="off" aria-controls="search-suggestions" aria-expanded="false" value="{{ request.args.q or '' if request.endpoint == 'catalog.index' else '' }}"
              placeholder="Search tees, hoodies, colors" aria-label="Search the shop">
       <button type="submit">Search</button>
       <div id="search-suggestions" class="search-suggestions" hidden aria-label="Product suggestions"></div>
@@ -69,13 +69,11 @@
 <main class="content public wrap">
 {% endif %}
     {% if config.NAV_UNLOCKED %}
-    <div class="proto-note">Prototype copy — navigation is unlocked, so pages open without clocking in. Close it and use <code>python run.py</code> for the real system.</div>
+    <div class="proto-note">Prototype copy — navigation is unlocked, so pages open without clocking in. Close it and use <code>node run.js</code> for the real system.</div>
     {% endif %}
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% for category, message in messages %}
-        <div class="flash {{ category }}" role="status">{{ message }}</div>
-      {% endfor %}
-    {% endwith %}
+    {% for f in flashes %}
+      <div class="flash {{ f.category }}" role="status">{{ f.message }}</div>
+    {% endfor %}
     {% block content %}{% endblock %}
   </main>
 {% if staff_layout %}</div></div>
@@ -83,7 +81,7 @@
 <footer class="site-foot">
   <div class="wrap foot-grid">
     <section class="foot-brand">
-      <img class="foot-logo" src="{{ url_for('static', filename='logo-light.png') }}" alt="{{ store.name }}">
+      <img class="foot-logo" src="{{ url_for('static', {filename: 'logo-light.png'}) }}" alt="{{ store.name }}">
       <p class="foot-tag">{{ store.tagline }}</p>
       <h3>How to order</h3>
       <p>To order, please contact our official Facebook page.</p>
@@ -108,10 +106,10 @@
 </footer>
 {% endif %}
 {% if staff_layout %}{% include "_approval_modal.html" %}{% include "_form_approval_modal.html" %}{% endif %}
-<script src="{{ url_for('static', filename='lightbox.js') }}" defer></script>
-<script src="{{ url_for('static', filename='shop.js') }}" defer></script>
-<script src="{{ url_for('static', filename='approval.js') }}" defer></script>
-<script src="{{ url_for('static', filename='modal.js') }}" defer></script>
-{% if staff_layout %}<script src="{{ url_for('static', filename='staff-ui.js') }}" defer></script>{% endif %}
+<script src="{{ url_for('static', {filename: 'lightbox.js'}) }}" defer></script>
+<script src="{{ url_for('static', {filename: 'shop.js'}) }}" defer></script>
+<script src="{{ url_for('static', {filename: 'approval.js'}) }}" defer></script>
+<script src="{{ url_for('static', {filename: 'modal.js'}) }}" defer></script>
+{% if staff_layout %}<script src="{{ url_for('static', {filename: 'staff-ui.js'}) }}" defer></script>{% endif %}
 </body>
 </html>

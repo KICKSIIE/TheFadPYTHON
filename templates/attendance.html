@@ -39,7 +39,7 @@
   </div>
   {% if ot.state == 'open' %}
   <p class="muted small">Automatically closes at the approved end.</p>
-  {% elif ot.state in ('early', 'wait', 'ready') %}
+  {% elif ot.state in ['early', 'wait', 'ready'] %}
   <form method="post" action="{{ url_for('attendance.overtime_in') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <button class="btn" type="submit" {{ '' if ot.state == 'ready' else 'disabled' }}>Start overtime</button>
@@ -49,7 +49,7 @@
 {% endif %}
 {% if upcoming %}
 <p class="muted small">Upcoming overtime:
-  {% for p in upcoming %}{{ p.work_date.strftime('%a, %b %d, %Y') }} {{ p.start_time.strftime('%I:%M %p') }} to {{ p.end_time.strftime('%I:%M %p') }}{{ ', ' if not loop.last }}{% endfor %}</p>
+  {% for p in upcoming %}{{ p.work_date.strftime('%a, %b %d, %Y') }} {{ p.start_time|time12 }} to {{ p.end_time|time12 }}{{ ', ' if not loop.last }}{% endfor %}</p>
 {% endif %}
 
 <h2>Recent shifts</h2>

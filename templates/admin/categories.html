@@ -20,7 +20,7 @@
     <tr>
       <td class="num id-cell">{{ c.category_id }}</td>
       <td colspan="3">
-        <form method="post" class="row-form" id="cat{{ c.category_id }}" action="{{ url_for('admin_products.update_category', category_id=c.category_id) }}">
+        <form method="post" class="row-form" id="cat{{ c.category_id }}" action="{{ url_for('admin_products.update_category', {category_id: c.category_id}) }}">
           <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
           <input name="category_name" value="{{ c.category_name }}" maxlength="50" required aria-label="Name">
           <input name="display_order" type="number" min="0" value="{{ c.display_order }}" class="narrow" aria-label="Display order">
@@ -30,7 +30,7 @@
       <td class="actions">
         <button class="btn btn-sm btn-quiet" type="submit" form="cat{{ c.category_id }}">Save</button>
         <button class="btn btn-sm btn-danger" type="button"
-                data-confirm data-action="{{ url_for('admin_products.delete_category', category_id=c.category_id) }}"
+                data-confirm data-action="{{ url_for('admin_products.delete_category', {category_id: c.category_id}) }}"
                 data-title="Delete category" data-confirm-label="Delete" data-danger="1"
                 data-message="Delete &quot;{{ c.category_name }}&quot;? A category that still holds products cannot be deleted.">Delete</button>
       </td>

@@ -6,7 +6,7 @@
   <a class="btn btn-quiet" href="{{ url_for('admin_promos.index') }}">Back</a>
 </div>
 <div class="editor-layout">
-<form id="promo-editor" class="form wide" method="post" action="{{ url_for('admin_promos.edit', discount_id=discount_id) if editing else url_for('admin_promos.new') }}">
+<form id="promo-editor" class="form wide" method="post" action="{{ url_for('admin_promos.edit', {discount_id: discount_id}) if editing else url_for('admin_promos.new') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <div class="field-grid">
     <div class="field">
@@ -52,7 +52,7 @@
   </div>
   {% elif promo.status == 'Active' %}
   <p class="muted small">Apply this active promo to a product or the whole store. Save changes to the promo details first.</p>
-  <form method="post" action="{{ url_for('admin_promos.apply', discount_id=discount_id) }}">
+  <form method="post" action="{{ url_for('admin_promos.apply', {discount_id: discount_id}) }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
     <div class="field"><label for="apply-scope">Apply to</label>
       <select id="apply-scope" name="scope" data-promo-scope>
@@ -78,7 +78,7 @@
     <tr><td>{{ p.name }}</td><td class="num">{{ p.variants }}</td><td class="num">{{ p.base|peso }}</td><td class="num">{{ p.promo|peso }}</td>
       <td class="actions">
         <button class="btn btn-sm btn-danger" type="button"
-                data-confirm data-action="{{ url_for('admin_promos.unlink', product_id=p.product_id) }}"
+                data-confirm data-action="{{ url_for('admin_promos.unlink', {product_id: p.product_id}) }}"
                 data-title="Remove from promo" data-confirm-label="Remove" data-danger="1"
                 data-message="Remove {{ p.name }} from this promo? Its prices go back to normal.">Remove</button>
       </td></tr>

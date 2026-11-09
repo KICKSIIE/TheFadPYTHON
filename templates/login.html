@@ -3,7 +3,7 @@
 {% block title %}Sign in{% endblock %}
 {% block content %}
 <section class="login">
-  <img class="login-logo" src="{{ url_for('static', filename='logo-dark.png') }}" alt="The Fad">
+  <img class="login-logo" src="{{ url_for('static', {filename: 'logo-dark.png'}) }}" alt="The Fad">
   <h1>Sign in</h1>
   <form method="post" action="{{ url_for('auth.login') }}">
     <input type="hidden" name="_csrf" value="{{ csrf_token() }}">

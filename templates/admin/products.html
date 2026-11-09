@@ -21,9 +21,9 @@
 </form>
 <p class="view-toggle muted">
   {% if variants_view %}Every color and size &middot;
-  <a href="{{ url_for('admin_products.index', q=q or None, category=category, inactive='1' if show_inactive else None) }}">Group by product</a>
+  <a href="{{ url_for('admin_products.index', {q: q or None, category: category, inactive: '1' if show_inactive else None}) }}">Group by product</a>
   {% else %}One row per product &middot;
-  <a href="{{ url_for('admin_products.index', q=q or None, category=category, inactive='1' if show_inactive else None, variants='1') }}">Show every color and size</a>
+  <a href="{{ url_for('admin_products.index', {q: q or None, category: category, inactive: '1' if show_inactive else None, variants: '1'}) }}">Show every color and size</a>
   {% endif %}</p>
 {% if products and not variants_view %}
 <div class="table-wrap"><table class="table">
@@ -31,7 +31,7 @@
   <tbody>
   {% for c in cards %}
     {% set off = c.rows|rejectattr('is_active')|list|length %}
-    {% set ids = c.rows|map(attribute='product_id')|list %}
+    {% set ids = c.rows|map('product_id')|list %}
     <tr>
       <td class="thumb-cell">{{ thumb(c.image_id, c.name, 'sm') }}</td>
       <td class="product-cell">{{ c.name }}<div class="muted small">{{ c.category }}, {{ c.rows|length }} item{{ '' if c.rows|length == 1 else 's' }}</div></td>
@@ -42,7 +42,7 @@
       <td class="num">{{ c.stock }}{% if c.status == 'out' %} <span class="badge warn">Out</span>{% elif c.status == 'low' %} <span class="badge warn">Low</span>{% endif %}</td>
       <td>{% if c.promo %}<span class="badge promo">{{ c.promo.discount_percentage }}% off</span>{% else %}<span class="muted">—</span>{% endif %}</td>
       <td>{% if off == c.rows|length %}<span class="badge">Inactive</span>{% else %}<span class="badge ok">Active</span>{% if off %} <span class="badge">{{ off }} inactive</span>{% endif %}{% endif %}</td>
-      <td class="actions"><a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=c.first_id) }}">Edit</a></td>
+      <td class="actions"><a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', {product_id: c.first_id}) }}">Edit</a></td>
     </tr>
   {% endfor %}
   </tbody>
@@ -65,9 +65,9 @@
       <td>{% if p.discount_name %}<span class="badge promo">{{ p.discount_percentage }}% off</span>{% else %}<span class="muted">—</span>{% endif %}</td>
       <td><span class="badge {{ 'ok' if p.is_active else '' }}">{{ 'Active' if p.is_active else 'Inactive' }}</span></td>
       <td class="actions">
-        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', product_id=p.product_id) }}">Edit</a>
+        <a class="btn btn-sm btn-quiet" href="{{ url_for('admin_products.edit', {product_id: p.product_id}) }}">Edit</a>
         <button class="btn btn-sm {{ 'btn-danger' if p.is_active else 'btn-quiet' }}" type="button"
-                data-confirm data-action="{{ url_for('admin_products.set_active', product_id=p.product_id) }}"
+                data-confirm data-action="{{ url_for('admin_products.set_active', {product_id: p.product_id}) }}"
                 data-title="{{ 'Deactivate item' if p.is_active else 'Reactivate item' }}"
                 data-confirm-label="{{ 'Deactivate' if p.is_active else 'Reactivate' }}"
                 data-danger="{{ '1' if p.is_active else '0' }}"

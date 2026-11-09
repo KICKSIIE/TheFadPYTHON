@@ -5,7 +5,7 @@
   <h1>{{ 'Edit shift' if shift.dtr_id else 'Add shift' }}</h1>
   <div><a class="btn btn-quiet" href="{{ url_for('attendance.everyone') }}">Back</a></div>
 </div>
-<form class="form wide" method="post" action="{{ url_for('attendance.edit_shift', dtr_id=shift.dtr_id) if shift.dtr_id else url_for('attendance.new_shift') }}">
+<form class="form wide" method="post" action="{{ url_for('attendance.edit_shift', {dtr_id: shift.dtr_id}) if shift.dtr_id else url_for('attendance.new_shift') }}">
   <input type="hidden" name="_csrf" value="{{ csrf_token() }}">
   <label for="user_id">Staff</label>
   <select id="user_id" name="user_id" required>
